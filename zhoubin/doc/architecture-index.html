@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<title>Personal</title>
+	<meta name="description" content="">
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- <link rel="shortcut icon" href="img/favicon.png"> -->
+	<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet'>
+	<!-- Syntax Highlighter -->
+	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shCore.css" media="all">
+	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shThemeDefault.css" media="all">
+	<!-- Font Awesome CSS-->
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<!-- Normalize/Reset CSS-->
+	<link rel="stylesheet" href="css/normalize.min.css">
+	<!-- Main CSS-->
+	<link rel="stylesheet" href="css/main.css">
+	
+</head>
+
+<body id="welcome">
+	
+	<aside class="left-sidebar">
+		<div class="logo">
+			<a href="../index.html">
+				<img src="img/logo.png" alt="">
+			</a>
+		</div>
+		<nav class="left-nav">
+			<ul id="nav">
+				<li class="current"><a href="#java">JAVA</a></li>
+				<li><a href="#nginx">Nginx+Apache</a></li>
+				<li><a href="#tomcat">tomcat</a></li>
+				<li><a href="#activeMQ">ActiveMQ+RocketMQ+Rabbitmq</a></li>
+				<li><a href="#netty">Netty+Nio+Mina</a></li>
+				<li><a href="#kafka">Kafka</a></li>
+				<li><a href="#spring">Spring</a></li>
+				<li><a href="#redis">Redis+Memcached</a></li>
+				<li><a href="#mybatis">Mybatis</a></li>
+				<li><a href="#mycat">mycat</a></li>
+			</ul>
+		</nav>
+	</aside>
+	
+	<div id="main-wrapper">
+		<div class="main-content">
+
+			<section id="java">
+				<div class="content-header">
+					<h1>登录</h1>
+				</div>
+
+				<div class="welcome">
+
+					<h2 class="twenty">登录流程</h2>
+					<div class="section-content">
+						<ol>
+							<li>验证码生成</li>
+							<li>获取登录注册加密动态秘钥请求</li>
+							<li>获取登录注册加密动态秘钥请求</li>
+						</ol>
+					</div>
+
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">Java 8 日期时间 API</h2>
+					<pre class="brush: java">
+						// 本地化日期时间 API
+						public void testLocalDateTime(){
+
+						  LocalDateTime currentTime = LocalDateTime.now();
+						  System.out.println("当前时间: " + currentTime);
+
+						  LocalDate date1 = currentTime.toLocalDate();
+						  System.out.println("date1: " + date1);
+
+						  Month month = currentTime.getMonth();
+						  int day = currentTime.getDayOfMonth();
+						  int seconds = currentTime.getSecond();
+
+						  System.out.println("月: " + month +", 日: " + day +", 秒: " + seconds);
+
+						  LocalDateTime date2 = currentTime.withDayOfMonth(10).withYear(2012);
+						  System.out.println("date2: " + date2);
+
+						  // 12 december 2014
+						  LocalDate date3 = LocalDate.of(2014, Month.DECEMBER, 12);
+						  System.out.println("date3: " + date3);
+
+						  // 22 小时 15 分钟
+						  LocalTime date4 = LocalTime.of(22, 15);
+						  System.out.println("date4: " + date4);
+
+						  // 解析字符串
+						  LocalTime date5 = LocalTime.parse("20:15:30");
+						  System.out.println("date5: " + date5);
+					   	}
+
+
+						//输出结果如下:
+						当前时间: 2016-09-15T20:55:48.668
+						date1: 2016-04-15
+						月: APRIL, 日: 15, 秒: 48
+						date2: 2016-09-15T20:55:48.668
+						date3: 2014-12-12
+						date4: 22:15
+						date5: 20:15:30
+
+
+						// 使用时区的日期时间API
+						public void testZonedDateTime(){
+
+							ZonedDateTime date1 = ZonedDateTime.parse("2015-12-03T10:15:30+05:30[Asia/Shanghai]");
+							System.out.println("date1: " + date1);
+
+							ZoneId id = ZoneId.of("Europe/Paris");
+							System.out.println("ZoneId: " + id);
+
+							ZoneId currentZone = ZoneId.systemDefault();
+							System.out.println("当期时区: " + currentZone);
+						}
+
+
+						//输出结果如下:
+						date1: 2015-12-03T10:15:30+08:00[Asia/Shanghai]
+						ZoneId: Europe/Paris
+						当期时区: Asia/Shanghai
+
+					</pre>
+
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">并行数组</h2>
+					<pre class="brush: java">
+						// 本地化日期时间 API
+						public void testParallelSort(){
+
+						  long[] arrayOfLong = new long [ 20000 ];
+
+							Arrays.parallelSetAll( arrayOfLong,
+								index -> ThreadLocalRandom.current().nextInt( 1000000 ) );
+							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
+								i -> System.out.print( i + " " ) );
+							System.out.println();
+
+							Arrays.parallelSort( arrayOfLong );
+							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
+								i -> System.out.print( i + " " ) );
+							System.out.println();
+						}
+
+						//输出结果如下:
+						Unsorted: 591217 891976 443951 424479 766825 351964 242997 642839 119108 552378
+						Sorted: 39 220 263 268 325 607 655 678 723 793
+					</pre>
+
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">Java 8 JVM的新特性</h2>
+					<ol>
+						使用Metaspace（JEP 122）代替持久代（PermGen space）。在JVM参数方面，使用-XX:MetaSpaceSize和-XX:MaxMetaspaceSize代替原来的-XX:PermSize和-XX:MaxPermSize
+					</ol>
+
+				</div>
+
+			</section>
+
+		</div>
+	</div>
+	
+	
+	<!-- Essential JavaScript Libraries
+	==============================================-->
+	<script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
+	<script type="text/javascript" src="js/jquery.nav.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript">
+		SyntaxHighlighter.all()
+	</script>
+	<script type="text/javascript" src="js/custom.js"></script>
+	
+</body>
+</html>

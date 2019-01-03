@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<title>Personal</title>
+	<meta name="description" content="">
+	<!-- Mobile Specific Meta -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- <link rel="shortcut icon" href="img/favicon.png"> -->
+	<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet'>
+	<!-- Syntax Highlighter -->
+	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shCore.css" media="all">
+	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shThemeDefault.css" media="all">
+	<!-- Font Awesome CSS-->
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<!-- Normalize/Reset CSS-->
+	<link rel="stylesheet" href="css/normalize.min.css">
+	<!-- Main CSS-->
+	<link rel="stylesheet" href="css/main.css">
+	
+</head>
+
+<body id="welcome">
+	
+	<aside class="left-sidebar">
+		<div class="logo">
+			<a href="../index.html">
+				<img src="img/logo.png" alt="">
+			</a>
+		</div>
+		<nav class="left-nav">
+			<ul id="nav">
+				<li class="current"><a href="#svn">SVN</a></li>
+				<li><a href="#git">git和github</a></li>
+				<li><a href="#maven">maven</a></li>
+				<li><a href="#eclipse">eclipse</a></li>
+				<li><a href="#idea">idea</a></li>
+				<li><a href="#xshell">xshell</a></li>
+				<li><a href="#flashFXP">flashFXP</a></li>
+			</ul>
+		</nav>
+	</aside>
+	
+	<div id="main-wrapper">
+		<div class="main-content">
+
+			<section id="svn">
+				<div class="content-header">
+					<h1>svn</h1>
+				</div>
+
+				<div class="welcome">
+
+					<h2 class="twenty">Linux安装SVN服务器</h2>
+					<div class="section-content">
+						<ol>
+							<li>安装SVN服务器</li>
+							<pre class="brush: bash"># yum install httpd httpd-devel subversion mod_dav_svn mod_auth_mysql</pre>
+							<li>代码库创建</li>
+							<h6>安装完成后要建立SVN库：</h6>
+							<pre class="brush: bash"># mkdir -p /opt/svn/repositories</pre>
+							<pre class="brush: bash"># svnadmin create /opt/svn/repositories</pre>
+							<li>配置版本库</li>
+							<h6>进入上面conf文件夹下，进行配置：</h6>
+							<h6>a.用户密码passwd配置：</h6>
+							<pre class="brush: bash"># vi + passwd  //+表示光标放在文件最低端</pre>
+							<h6>修改passwd为一下内容：</h6>
+							<pre class="brush: bash">
+								[users]
+								# harry = harryssecret
+								# sally = sallyssecret
+								zhoubin=123456
+							</pre>
+							<h6>b. 权限控制authz配置：</h6>
+							<pre class="brush: bash"># vi + authz</pre>
+							<h6>设置哪些用户可以访问哪些目录，向authz文件追加以下内容：</h6>
+							<pre class="brush: bash">
+								[/]
+								zhoubin=rw  //给该用户访问所有库的权限
+								或
+								[repositories:/project]  //repository库的根目录权限
+								zhoubin=rw
+							</pre>
+							<h6>c. 服务svnserve.con配置：</h6>
+							<pre class="brush: bash"># vi + svnserve.conf</pre>
+							<h6>添加以下内容：(这里注意各标签不能错，也不能有重复，不然无法连接)</h6>
+							<pre class="brush: bash">
+								[general]
+								#匿名访问的权限，可以是read,write,none,默认为read
+								anon-access=none
+								#使授权用户有写权限
+								auth-access=write
+								#密码数据库的路径
+								password-db=passwd
+								#访问控制文件
+								authz-db=authz
+								#认证命名空间，subversion会在认证提示里显示，并且作为凭证缓存的关键字
+								realm=/opt/svn/repositories
+							</pre>
+							<h6>d. 配置防火墙端口：(这一步不是必须的，目的是放开端口)</h6>
+							<pre class="brush: bash"># vi /etc/sysconfig/iptables</pre>
+							<h6>添加以下内容：</h6>
+							<pre class="brush: bash">
+								-A INPUT -m state --state NEW -m tcp -p tcp --dport 3690 -j ACCEPT
+							</pre>
+							<h6>保存后重启防火墙：</h6>
+							<pre class="brush: bash">
+								# service iptables restart
+							</pre>
+							<li>启动SVN</li>
+							<h6>a. 启动SVN：</h6>
+							<pre class="brush: bash">
+								# svnserve -d -r /opt/svn/repositories
+							</pre>
+							<h6>b. 查看SVN进程：</h6>
+							<pre class="brush: bash">
+								# ps -ef|grep svn|grep -v grep
+							</pre>
+							<h6>c. 停止重启SVN：</h6>
+							<pre class="brush: bash">
+								# killall svnserve //停止
+								# svnserve -d -r /opt/svn/repositories // 启动
+							</pre>
+							<li>测试连接</li>
+							<h6>使用TortoiseSVN进行测试：</h6>
+							<h6>客户端连接地址：svn://192.168.*.*；然后，输入用户名密码</h6>
+
+						</ol>
+					</div>
+
+				</div>
+
+			</section>
+
+			<section id="git">
+				<div class="content-header">
+					<h1>git和github</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">GitHub版本控制</h2>
+					<div class="section-content">
+						<ol>
+							<li>注册一个GitHub账号，打开<a href="https://github.com/" target="_blank">https://github.com/</a>，点击“Sign up”进行注册</li>
+							<li>点击“create an account”后，可进入后续界面</li>
+							<li>登陆后的界面如下：点击“+New repository”</li>
+							<div class="col-lg-6 col-md-6 home-about-left">
+								<img class="img-fluid" src="img/3.jpg" alt="">
+							</div>
+							<li>创建之后，Code标签目录下面可以把自己的代码上传到这个地方，右侧Clone or download按钮可以看到git仓库地址和下载的zip文件地址</li>
+							<div class="col-lg-6 col-md-6 home-about-left">
+								<img class="img-fluid" src="img/4.jpg" alt="">
+							</div>
+							<li>创建之后，Code标签目录下面可以把自己的代码上传到这个地方，右侧Clone or download按钮可以看到git仓库地址和下载的zip文件地址</li>
+							<div class="col-lg-6 col-md-6 home-about-left">
+								<img class="img-fluid" src="img/4.jpg" alt="">
+							</div>
+						</ol>
+					</div>
+
+				</div>
+
+
+			</section>
+
+		</div>
+	</div>
+	
+	
+	<!-- Essential JavaScript Libraries
+	==============================================-->
+	<script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
+	<script type="text/javascript" src="js/jquery.nav.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript">
+		SyntaxHighlighter.all()
+	</script>
+	<script type="text/javascript" src="js/custom.js"></script>
+	
+</body>
+</html>
