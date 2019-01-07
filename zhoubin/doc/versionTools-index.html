@@ -36,10 +36,8 @@
 				<li class="current"><a href="#svn">SVN</a></li>
 				<li><a href="#git">git和github</a></li>
 				<li><a href="#maven">maven</a></li>
-				<li><a href="#eclipse">eclipse</a></li>
-				<li><a href="#idea">idea</a></li>
-				<li><a href="#xshell">xshell</a></li>
-				<li><a href="#flashFXP">flashFXP</a></li>
+				<li><a href="#idea">idea和eclipse</a></li>
+				<li><a href="#xshell">xshell和flashFXP</a></li>
 			</ul>
 		</nav>
 	</aside>
@@ -153,17 +151,175 @@
 							<div class="col-lg-6 col-md-6 home-about-left">
 								<img class="img-fluid" src="img/4.jpg" alt="">
 							</div>
-							<li>创建之后，Code标签目录下面可以把自己的代码上传到这个地方，右侧Clone or download按钮可以看到git仓库地址和下载的zip文件地址</li>
-							<div class="col-lg-6 col-md-6 home-about-left">
-								<img class="img-fluid" src="img/4.jpg" alt="">
-							</div>
+							<li>上传本地代码至GitHub</li>
+							<pre class="brush: bash">
+								$ git init //把这个目录变成Git可以管理的仓库
+								$ git add README.md //文件添加到仓库
+								$ git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了
+								$ git commit -m "file commit" //把文件提交到仓库
+								$ git remote add origin git@github.com:MyCrazy520/xxx.git//关联远程仓库
+								$ git pull origin master //把远程库上代码同步到本地库,先更新，以免冲突
+								$ git push -u origin master //把本地库的所有内容推送到远程库上
+								$ git clone git@github.com:MyCrazy520/xxx.git //从远程克隆一份到本地可以通过
+							</pre>
+							<li>SSH Key的配置</li>
+								<h6>Windows下打开Git Bash，创建SSH Key，按提示输入密码，可以不填密码一路回车</h6>
+								<pre class="brush: bash">
+									$ ssh-keygen -t rsa -C "注册邮箱"
+								</pre>
+								<h6>然后用户主目录/.ssh/下有两个文件，id_rsa是私钥，id_rsa.pub是公钥</h6>
+								<h6>获取key，打开.ssh下的id_rsa.pub文件，里面的内容就是key的内容</h6>
+								<pre class="brush: bash">
+									$ start ~/.ssh/id_rsa.pub
+								</pre>
+								<h6>登录GitHub，打开"SSH Keys"页面，快捷地址：https://github.com/settings/ssh </h6>
+								<div class="col-lg-6 col-md-6 home-about-left">
+									<img class="img-fluid" src="img/5.jpg" alt="">
+								</div>
 						</ol>
 					</div>
 
 				</div>
 
+			</section>
+
+			<section id="maven">
+				<div class="content-header">
+					<h1>maven</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">Nexus搭建maven私有仓库</h2>
+					<div class="section-content">
+						<ol>
+							<li>下载Nexue<a href="https://www.sonatype.com/download-oss-sonatype" target="_blank">https://www.sonatype.com/download-oss-sonatype</a></li>
+							<li>配置启动</li>
+								<h6>解压文件后：配置bin目录下nexus.vmoptions文件，适当调整内存参数，防止占用内存太大</h6>
+								<h6>etc目录下nexus-default.properties文件可配置默认端口和host及访问根目录</h6>
+								<h6>linux：bin目录下执行sh nexus start启动服务，sh nexus stop停止服务</h6>
+								<h6>windows：bin目录，按住Shift键右键鼠标，选择“在此处打开命令窗口”（管理员身份），安装服务nexus.exe /install，卸载服务nexus.exe /uninstall，到计算机管理中启动nexus服务</h6>
+								<h6>地址栏访问nexus：localhost:8081</h6>
+							<li>用户登录</li>
+								<h6>默认管理员身份登录，帐号：admin，密码：admin123</h6>
+							<li>Roles</li>
+								<h6>用户角色，新建一个角色，指定该角色可对哪些库进行哪些操作</h6>
+								<img class="img-fluid" src="img/6.jpg" alt="">
+							<li>settings文件</li>
+								<h6>repository使用nexus配置group组下载依赖，当私库服务器连接不上时，还可以从mirror中查找依赖，proxies可通过nginx配置</h6>
+								<img class="img-fluid" src="img/7.png" alt="">
+							<li>pom文件</li>
+							<h6>pom最后添加如下配置，注意repository的id需要和settings中server的id一致，也就是以server指定的用户登录进行上传部署，普通游客没有权限部署，部署命令：mvn clean deploy</h6>
+
+						</ol>
+					</div>
+				</div>
+			</section>
+
+			<section id="idea">
+				<div class="content-header">
+					<h1>idea</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">IDEA一些规范配置</h2>
+					<div class="section-content">
+						<ol>
+							<li>类和方法注释模板</li>
+							<h6>在File->Settings->Editor->File and Code Templates下分别修改Class，Interface，Enum等注释模板，Class模板部分修改如下，其余的举一反三进行修改。以下所示的${DESCRIPTION}是自定义变量，会在创建类时请求输入
+							</h6>
+							<pre class="brush: bash">
+									/**
+									  * Copyright (C), 2015-${YEAR}, XXX有限公司
+									  * FileName: ${NAME}
+									  * Author:   ${USER}
+									  * Date:     ${DATE} ${TIME}
+									  * Description: ${DESCRIPTION}
+									  * History:
+									  * $lt;author$gt;      $lt;time$gt;      $lt;version$gt;      $lt;desc$gt;
+									  * 作者姓名              修改时间           版本号              描述
+									  */
+									#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != "")
+										package ${PACKAGE_NAME};
+									#end
+
+									/**
+									 * 〈一句话功能简述〉<br>
+									 * 〈${DESCRIPTION}〉
+									 *
+									 * @author ${USER}
+									 * @create ${DATE}
+									 * @since 1.0.0
+									 */
+									public class ${NAME} {
+
+									}
+							</pre>
+							<li>方法注释模板修改</li>
+							<h6>在File->Settings->Editor->Live Templates下添加自定义Template Group，并在自定义Template Group下添加自定义Template
+							</h6>
+							<h6>完成配置后，只需在方法内执行/**+Enter键即可生成注释，切记这里说的是方法内部，因为methodParameters()的作用域只在方法内部
+							</h6>
+						</ol>
+					</div>
+
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">Java热部署插件JRebel在idea安装及使用</h2>
+					<div class="section-content">
+						<ol>
+							<li>安装JRebel的插件,安装方法和其他插件安装方法一样,本地安装快一些</li>
+							<li>安装完后，顶部会多两个启动图标</li>
+							<li>启动之后更新资源重新编译（Ctrl + Shift + F9）即可</li>
+						</ol>
+					</div>
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">idea提高开发效率的一些操作</h2>
+					<div class="section-content">
+						<ol>
+							<li>采用分屏开发,在需要分屏的页面，鼠标右键Split Vertically</li>
+							<li>Ctrl+Shift+R:通用搜索</li>
+							<li>Ctrl+Shift+N:查找文件</li>
+							<li>Atl+Enter:自动补全</li>
+						</ol>
+					</div>
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">eclipse一个快捷功能使用</h2>
+					<div class="section-content">
+						<ol>
+							<li>代码自动生成功能</li>
+							<h6>新建了三个成员变量，现在我们想新建两个构造函数，一个是无参数构造函数，一个是带三个参数的构造函数，让Eclipse去生成，只需要右键，点击Generator方法</h6>
+						</ol>
+					</div>
+				</div>
+			</section>
+
+			<section id="xshell">
+				<div class="content-header">
+					<h1>xshell</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">xshell</h2>
+					<div class="section-content">
+						<ol>
+							<li>可以同时开启多个窗口，统一输入命令</li>
+						</ol>
+					</div>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">flashFXP</h2>
+					<div class="section-content">
+						<ol>
+							<li>flashFXP处理文件上传很方便，统一输入命令</li>
+						</ol>
+					</div>
+				</div>
 
 			</section>
+
+
 
 		</div>
 	</div>

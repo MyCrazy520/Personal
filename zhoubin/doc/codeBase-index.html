@@ -37,8 +37,10 @@
 				<li><a href="#python3">PYTHON3</a></li>
 				<li><a href="#htmlCSS">HTML+CSS</a></li>
 				<li><a href="#less">LESS</a></li>
-				<li><a href="#shell">SHELL</a></li>
 				<li><a href="#javaScript">JAVASCRIPT</a></li>
+				<li><a href="#shell">SHELL</a></li>
+				<li><a href="#goLang">GOLANG</a></li>
+				
 			</ul>
 		</nav>
 	</aside>
@@ -504,18 +506,249 @@
 
 			<section id="shell">
 				<div class="content-header">
-					<h1>SHELL</h1>
+					<h1>linux命令和SHELL</h1>
 				</div>
 
 
 				<div class="features">
-					<h2 class="twenty">List（列表）</h2>
+					<h2 class="twenty">Linux实用命令</h2>
+					<h6>df</h6>
 					<pre class="brush: bash">
-
+						# df -h /etc   <==等待你的输入！将 /etc 底下的可用的磁盘容量以易读的容量格式显示
+						Filesystem            Size  Used Avail Use% Mounted on
+						/dev/hdc2             9.5G  3.7G  5.4G  41% /
 					</pre>
+					<h6>du</h6>
+					<p>Linux du命令也是查看使用空间的，但是与df命令不同的是Linux du命令是对文件和目录磁盘使用的空间的查</p>
+					<pre class="brush: bash">
+						du -sm /*   c查根目录底下每个目录所占用的容量
+						7       /bin
+						6       /boot
+						3859    /usr     <==系统初期最大
+					</pre>
+					<h6>fdisk</h6>
+					<p>fdisk 是 Linux 的磁盘分区表操作工具</p>
+					<pre class="brush: bash">
+						[root@www ~]# df /            <==注意：重点在找出磁盘文件名而已
+						Filesystem           1K-blocks      Used Available Use% Mounted on
+						/dev/hdc2              9920624   3823168   5585388  41% /
+
+						[root@www ~]# fdisk /dev/hdc  <==仔细看，不要加上数字喔！
+						The number of cylinders for this disk is set to 5005.
+						There is nothing wrong with that, but this is larger than 1024,
+						and could in certain setups cause problems with:
+						1) software that runs at boot time (e.g., old versions of LILO)
+						2) booting and partitioning software from other OSs
+						   (e.g., DOS FDISK, OS/2 FDISK)
+
+						Command (m for help):     <==等待你的输入！
+					</pre>
+					<p>输入 m 后，就会看到底下这些命令介绍</p>
+					<pre class="brush: bash">
+					Command (m for help): m   <== 输入 m 后，就会看到底下这些命令介绍
+					Command action
+					   a   toggle a bootable flag
+					   b   edit bsd disklabel
+					   c   toggle the dos compatibility flag
+					   d   delete a partition            <==删除一个partition
+					   l   list known partition types
+					   m   print this menu
+					   n   add a new partition           <==新增一个partition
+					   o   create a new empty DOS partition table
+					   p   print the partition table     <==在屏幕上显示分割表
+					   q   quit without saving changes   <==不储存离开fdisk程序
+					   s   create a new empty Sun disklabel
+					   t   change a partition's system id
+					   u   change display/entry units
+					   v   verify the partition table
+					   w   write table to disk and exit  <==将刚刚的动作写入分割表
+					   x   extra functionality (experts only)
+					</pre>
+					<p>使用 p 可以列出目前这颗磁盘的分割表信息，这个信息的上半部在显示整体磁盘的状态</p>
+					<p>离开 fdisk 时按下 q，那么所有的动作都不会生效！相反的， 按下w就是动作生效的意思。</p>
+					<pre class="brush: bash">
+						Command (m for help): p  <== 这里可以输出目前磁盘的状态
+
+						Disk /dev/hdc: 41.1 GB, 41174138880 bytes        <==这个磁盘的文件名与容量
+						255 heads, 63 sectors/track, 5005 cylinders      <==磁头、扇区与磁柱大小
+						Units = cylinders of 16065 * 512 = 8225280 bytes <==每个磁柱的大小
+
+						   Device Boot      Start         End      Blocks   Id  System
+						/dev/hdc1   *           1          13      104391   83  Linux
+						/dev/hdc2              14        1288    10241437+  83  Linux
+						/dev/hdc3            1289        1925     5116702+  83  Linux
+						/dev/hdc4            1926        5005    24740100    5  Extended
+						/dev/hdc5            1926        2052     1020096   82  Linux swap / Solaris
+						# 装置文件名 启动区否 开始磁柱    结束磁柱  1K大小容量 磁盘分区槽内的系统
+
+						Command (m for help): q
+					</pre>
+					<p>磁盘挂载与卸除</p>
+					<pre class="brush: bash">
+						# mount /dev/hdc6 /mnt/hdc6  <==创建的 /dev/hdc6 挂载到 /mnt/hdc6 上面
+						# umount /dev/hdc6 <==卸载/dev/hdc6
+					</pre>
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">shell脚本</h2>
+					<ol>
+						<li>脚本运行</li>
+						<pre class="brush: bash">
+							chmod +x ./test.sh  #使脚本具有执行权限
+							./test.sh  #执行脚本  要写成 ./test.sh
+						</pre>
+						<li>变量循环</li>
+						<pre class="brush: bash">
+							for file in `ls /etc`  #不推荐
+							或
+							for file in $(ls /etc)
+						</pre>
+						<li>拼接字符串</li>
+						<h6>双引号里可以出现转义字符</h6>
+						<pre class="brush: bash">
+							your_name="zhoubin"
+							greeting_1="hello, ${your_name} !"
+						</pre>
+						<pre class="brush: bash">
+							hello, zhoubin !
+						</pre>
+
+						<h6>单引号拼接出现转义字符</h6>
+						<pre class="brush: bash">
+							greeting_1='hello, ${your_name} !'
+						</pre>
+						<pre class="brush: bash">
+							hello, ${your_name} !
+						</pre>
+
+						<h6>获取字符串长度和截取字符串</h6>
+						<pre class="brush: bash">
+							echo ${#string}
+							echo ${string:1:4}
+						</pre>
+						<h6>查找子字符串：查找字符 i 或 o 的位置</h6>
+						<pre class="brush: bash">
+							echo `expr index "$string" io`
+						</pre>
+
+
+						<li>Shell 数组</li>
+						<h6>读取数组</h6>
+						<pre class="brush: bash">
+							echo ${array_name[@]}
+						</pre>
+						<h6>获取数组的长度:获取数组长度的方法与获取字符串长度的方法相同</h6>
+						<pre class="brush: bash">
+							# 取得数组元素的个数
+							length=${#array_name[@]}
+							# 或者
+							length=${#array_name[*]}
+							# 取得数组单个元素的长度
+							lengthn=${#array_name[n]}
+						</pre>
+
+						<li>Shell 传递参数</li>
+						<h6>$* 与 $@ 区别</h6>
+						<h6>只有在双引号中体现出来。假设在脚本运行时写了三个参数 1、2、3，，则 " * " 等价于 "1 2 3"（传递了一个参数），而 "@" 等价于 "1" "2" "3"（传递了三个参数）</h6>
+						<pre class="brush: bash">
+							#!/bin/bash
+							# author:zhoubin
+							# url:www.binleir.cn
+
+							echo "-- \$* 演示 ---"
+							for i in "$*"; do
+							echo $i
+							done
+
+							echo "-- \$@ 演示 ---"
+							for i in "$@"; do
+							echo $i
+							done
+						</pre>
+						<pre class="brush: bash">
+							$ chmod +x test.sh
+							$ ./test.sh 1 2 3
+							-- $* 演示 ---
+							1 2 3
+							-- $@ 演示 ---
+							1
+							2
+							3
+						</pre>
+					</ol>
 
 				</div>
 
+			</section>
+			
+			<section id="goLang">
+				<div class="content-header">
+					<h1>goLang基础</h1>
+				</div>
+
+
+				<div class="features">
+					<ol>
+						<li>变量声明</li>
+						<h6>不带声明格式的只能在函数体中出现</h6>
+						<pre class="brush: bash">
+							package main
+							import (
+								"fmt"
+							)
+
+							var s1 = 10
+
+							func main() {
+								s2 := 11  //不带声明格式的只能在函数体中出现
+								fmt.Println(s1)
+							}
+						</pre>
+						<li>常量声明</li>
+						<pre class="brush: bash">
+							func main() {
+								const LENGTH int = 10
+								const a, b, c = 1, false, "str"//多重赋值
+								fmt.Println(a, b, c)
+							}
+						</pre>
+						<li>常用函数区别</li>
+						<h6>len(),cap()</h6>
+						<pre class="brush: bash">
+							func main() {
+								slice1 := make([]int, 5)
+								slice2 := make([]int, 6, 10)
+								fmt.Println(slice1, len(slice1), cap(slice1)) //len在slice返回的是个数，而cap则返回的是最大容量
+								fmt.Println(slice2, len(slice2), cap(slice2))
+							}
+						</pre>
+						<pre class="brush: bash">
+							$ go run temp.go
+							[0 0 0 0 0] 5 5
+							[0 0 0 0 0 0] 6 10
+
+						</pre>
+						<li>iota</li>
+						<h6>iota是特殊常量，在关键字const出现时，被重置为0</h6>
+						<img src="img/9.png"/>
+						<pre class="brush: python">
+							Zhoubin-HX@DESKTOP-TT9T6VQ MINGW64 /d/Go/work
+							$ go run temp.go
+							0 1 2 zhoubin zhoubin 100 100 7 8
+						</pre>
+						<img src="img/10.png"/>
+						<pre class="brush: python">
+							$ go run temp.go
+							1 8 16 32
+						</pre>
+
+					</ol>
+					
+					
+				</div>
+
+			
 
 			</section>
 			
@@ -531,6 +764,7 @@
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJava.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushPython.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushErlang.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushCss.js"></script>
 	<script type="text/javascript">
