@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 <head>
 	<meta charset="utf-8">
-	<title>Personal</title>
+	<title>ZHOU BIN</title>
 	<meta name="description" content="">
 	<!-- Mobile Specific Meta -->
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -175,12 +175,139 @@
 					</ol>
 
 				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">HashMap和CurrentHashMap</h2>
+					<ol>
+						<li>HashMap没有锁机制，不是线程安全的;而CurrentHashMap在每个分段片上都用锁进行保护，从而让锁的粒度更精细一些，并发性能更好</li>
+						<li>ConcurrentHashMap对整个桶数组进行了分段，而HashMap则没有</li>
+						<li>Synchronized Map和Hashtable效率低</li>
+					</ol>
+
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">BlockingQuee中ArrayBlockingQueue,LinkedBlockingQueue</h2>
+					<ol>
+						<li>基于数组的阻塞队列实现，在ArrayBlockingQueue内部，维护了一个定长数组，以便缓存队列中的数据对象，这是一个常用的阻塞队列，除了一个定长数组外，ArrayBlockingQueue内部还保存着两个整形变量，分别标识着队列的头部和尾部在数组中的位置</li>
+						<li>基于链表的阻塞队列，同ArrayListBlockingQueue类似，其内部也维持着一个数据缓冲队列（该队列由一个链表构成），当生产者往队列中放入一个数据时，队列会从生产者手中获取数据，并缓存在队列内部，而生产者立即返回；只有当队列缓冲区达到最大值缓存容量时（LinkedBlockingQueue可以通过构造函数指定该值），才会阻塞生产者队列，直到消费者从队列中消费掉一份数据，生产者线程会被唤醒，反之对于消费者这端的处理也基于同样的原理</li>
+						<li>如果构造一个LinkedBlockingQueue对象，而没有指定其容量大小，LinkedBlockingQueue会默认一个类似无限大小的容量（Integer.MAX_VALUE），这样的话，如果生产者的速度一旦大于消费者的速度，也许还没有等到队列满阻塞产生，系统内存就有可能已被消耗殆尽了</li>
+					</ol>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">ConcurrentLinkedQueue一个很好用的队列</h2>
+					<ol>
+						<li>offer是往队列添加元素，poll是从队列取出元素并且删除该元素</li>
+						<li>peek:获取但不移除此队列的头；如果此队列为空，则返回 null</li>
+						<li>contains:如果此队列包含指定元素，则返回 true</li>
+						<li>iterator:返回在此队列元素上以恰当顺序进行迭代的迭代器</li>
+						<pre class="brush:java">
+							public static void main(String[] args) throws InterruptedException {
+								ConcurrentLinkedQueue$lt;String$rt; queue = new ConcurrentLinkedQueue$lt;String$rt;();
+								queue.offer("123");
+								queue.offer("234");
+								Iterator$lt;String$rt; iterator = queue.iterator();
+								while (iterator.hasNext()){
+									System.out.println(iterator.next());
+								}
+							}
+						</pre>
+
+					</ol>
+				</div>
+
 				<div class="section-content">
 					<h2 class="twenty">Java中的BIO,NIO,AIO</h2>
 					<ol>
 						<li>BIO:JDK1.4以前用的是BIO,阻塞IO</li>
 						<li>NIO:同步非阻塞方式，目前的主流，采用多路复用技术</li>
+						<pre class="brush: java"></pre>
 						<li>AIO:JDK1.7才实现真正的异步AIO术</li>
+						<pre class="brush: java">
+							public class AioServer {
+								public AioServer(int port) throws IOException {
+									AsynchronousServerSocketChannel listener = AsynchronousServerSocketChannel.open().bind(new InetSocketAddress(port));
+									listener.accept(null, new CompletionHandler&lt;AsynchronousSocketChannel, Void&rt;() {
+										@Override
+										public void completed(AsynchronousSocketChannel ch, Void vi) {
+											listener.accept(null,this);//接受下一个连接
+											handler(ch);
+										}
+
+										@Override
+										public void failed(Throwable exc, Void attachment) {
+											System.out.println("async io error");
+										}
+									});
+								}
+
+								//业务逻辑
+								public void handler(AsynchronousSocketChannel ch){
+									ByteBuffer byteBuffer = ByteBuffer.allocate(32);
+									try {
+										ch.read(byteBuffer).get();
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									} catch (ExecutionException e) {
+										e.printStackTrace();
+									}
+									byteBuffer.flip();
+									System.out.println("service accept:"+byteBuffer.get());
+								}
+
+								public static void main(String[] args) throws InterruptedException, IOException {
+									int port = 7080;
+									AioServer server= new AioServer(port);
+									System.out.println("watcher listner:"+port);
+									Thread.sleep(60000);
+								}
+							}
+						</pre>
+						<pre class="brush: java">
+							public class AioClient {
+								private AsynchronousSocketChannel client = null;
+								public AioClient(String host, int port) throws IOException, ExecutionException, InterruptedException {
+									client = AsynchronousSocketChannel.open();
+									Future<?> future = client.connect(new InetSocketAddress(host,port));
+									System.out.println("get:"+future.get());
+								}
+
+								public void write(byte b){
+									ByteBuffer byteBuffer = ByteBuffer.allocate(32);
+									byteBuffer.put(b);
+									byteBuffer.flip();
+									client.write(byteBuffer);
+								}
+
+								public static void main(String[] args ) throws InterruptedException, ExecutionException, IOException {
+									AioClient client = new AioClient("127.0.0.1",7080);
+									client.write((byte)34);
+								}
+							}
+						</pre>
+						<li>FileChanne</li>
+						<pre class="brush:java">
+							public  void readFile(String path) throws IOException {
+								ByteBuffer byteBuffer = ByteBuffer.allocate(1024);//定义缓冲区
+								FileChannel inFC = new FileInputStream(path).getChannel();
+								byteBuffer.clear();
+								int len = inFC.read(byteBuffer);
+								String content = new String(byteBuffer.array(),0,len);
+								System.out.println(content);
+
+								String fileWritePath = "C://Users/77363/iwillcome.txt";
+								this.writeFile(fileWritePath,content);
+
+								inFC.close();
+							}
+
+							public void writeFile(String pathFile,String Content) throws IOException {
+								FileChannel outFC = new FileOutputStream(pathFile,true).getChannel();
+
+								ByteBuffer byteBuffer = ByteBuffer.wrap(Content.getBytes());
+								outFC.write(byteBuffer);
+								outFC.close();
+							}
+						</pre>
 					</ol>
 				</div>
 
