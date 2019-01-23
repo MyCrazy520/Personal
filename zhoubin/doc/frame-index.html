@@ -34,12 +34,45 @@
 	</div>
 	<nav class="left-nav">
 		<ul id="nav">
-			<li><a href="#bootstrap">Bootstrap</a></li>
-			<li><a href="#jqueryEasyUi">JqueryEasyUi</a></li>
-			<li><a href="#layui">layui</a></li>
-			<li><a href="#less">Less</a></li>
-			<li><a href="#vue">vue</a></li>
-			<li><a href="#swagger">swagger</a></li>
+			<li>
+				<h5>前端</h5>
+				<ul>
+					<li><a href="#bootstrap">Bootstrap</a></li>
+					<li><a href="#layui">layui</a></li>
+					<li><a href="#less">Less</a></li>
+					<li><a href="#vue">vue</a></li>
+					<!--li><a href="#swagger">swagger</a></li-->
+				</ul>
+			</li>
+
+			<li>
+				<h5 alt="RPC远程过程调用">面向方法</h5>
+				<ul>
+					<li><a href="#netty">gRPC(netty)</a></li>
+					<li><a href="#dubbo">dubbo</a></li>
+					<li><a href="#springBoot">springBoot</a></li>
+					<li><a href="#springCloud">springCloud</a></li>
+				</ul>
+			</li>
+
+			<li>
+				<h5 alt="SOA面向服务的架构">面向消息</h5>
+				<ul>
+					<li><a href="#netty">netty</a></li>
+					<li><a href="#activeMQ">activeMQ</a></li>
+					<li><a href="#rabbitMQ">RabbitMQ</a></li>
+					<li><a href="#redis">Redis</a></li>
+					<li><a href="#zeroMQ">ZeroMQ</a></li>
+					<li><a href="#kafka">Kafka</a></li>
+				</ul>
+			</li>
+			<li>
+				<h5 alt="Representational state transfer">面向资源</h5>
+				<ul>
+					<li><a href="#springMVC">spring MVC</a></li>
+				</ul>
+			</li>
+
 
 		</ul>
 	</nav>
@@ -361,27 +394,274 @@
 			</div>
 		</section>
 
-		<section id="less">
-			<h2 class="title">Javascript Files and Structure</h2>
+		<section id="layui">
+			<h2 class="title">layui前端显示框架</h2>
 
-			<p class="fifteen"></p>
+			<p>layui API:https://www.layui.com/doc/modules/layer.html</p>
+			<p class="fifteen">基本语法格式如下</p>
 
-			<pre class="brush: html"></pre>
+			<pre class="brush:html">
+				<table id="plu-manage-list" lay-filter="plu-manage-list"></table>
+			</pre>
+
+			<pre class="brush: javascript">
+				layui.config({
+					base: '../../layuiadmin/'
+					,version: true
+				}).extend({
+					index: 'lib/index' //主入口模块
+					,common:'common'
+				}).use(['index', 'form','laydate', 'layer','table','setter','utils','layopen'], function(){
+					var $ = layui.$
+						,form = layui.form
+						,table = layui.table
+						,ctx = layui.setter.ctx
+						,utils = layui.utils
+						,common = layui.common;
+
+					//表格
+					utils.render({
+						elem: '#table_list'
+						, cellMinWidth:false
+						,url: ctx +'/shop/getShopList'
+						,method:'post'
+						,contentType: 'application/json; charset=UTF-8'
+						,cols: [[
+							{width: 30, type:'numbers'}
+							,{field: 'orgCode',width: 117,title: '组织编码',sort: true,templet: "#table_detail",align: "left"}
+							,{field: 'orgName', width:176,title: '组织名称'}
+							,{field: 'orgStatus', width: 105,title: '门店当前状态',align:'center',templet:function(d){return utils.formatDicValueToName("STORE_STATUS", d.orgStatus); }}
+							,{field: 'orgOriStatus',width: 91, title: '门店原状态',align:'center',templet:function(d){return utils.formatDicValueToName("STORE_STATUS", d.orgOriStatus); }}
+							,{field: 'statusUpdateTime', width:150,title: '状态更新时间',align:'center',templet: function (d){
+									if (d.statusUpdateTime) {
+										return utils.formatToDateTimeHMS(d.statusUpdateTime);
+									}else {
+										return '';
+									}
+								}}
+							,{field: 'openType', width: 100,title: '开业类型',align:'center',templet:function(d){return utils.formatDicValueToName("BUSINESS_OPEN_TYPE", d.openType);}}
+							,{field: 'openDate', width: 100,title: '开业日期',align:'center',templet: function (d){
+									if (d.openDate) {
+										return utils.formatToDate(d.openDate);
+									}else {
+										return '';
+									}
+								}}
+
+						]]
+						,page: true
+						,text: {none : '暂无相关数据'}
+						,height: 'full-160'
+						,type:'singleCheckkBoxSelector'
+					});
+				});
+			</pre>
+
 
 		</section>
 
-		<section id="vue">
-			<h2 class="title"> Contact Form </h2>
-
-			<p></p>
-
-			<pre class="brush:html"> </pre>
+		<section id="springBoot">
+			<h2 class="title">springBoot远程调试</h2>
+			<ol>
+				<li>安装erlang </li>
+				<pre class="brush:bash">
+					感觉没多大用,就不写啦
+				</pre>
+			</ol>
 		</section>
 
+		<section id="rabbitMQ">
+			<h2 class="title">rabbitMQ安装 </h2>
+			<ol>
+				<li>安装erlang </li>
+				<pre class="brush:bash">
+					# yum -y install make gcc gcc-c++ kernel-devel m4 ncurses-devel openssl-devel unixODBC-devel
+					# wget http://erlang.org/download/otp_src_20.3.tar.gz
+					# tar -xvzf otp_src_19.0.tar.gz
+					# ./configure --prefix=/usr/local/erlang --with-ssl -enable-threads -enable-smmp-support -enable-kernel-poll --enable-hipe --without-javac
+					# make
+					# make install
+
+					# ERLANG_HOME=/usr/local/erlang # 配置profile
+					# PATH=$PATH:$JAVA_HOME/bin:$ERLANG_HOME/bin  # 配置profile
+					# source /etc/profile   # 使其生效
+
+					# erl 检验erl
+					# > Eshell V9.3  (abort with ^G)
+				</pre>
+				<li>安装 rabbitmq </li>
+				<pre class="brush:bash">
+					# wget https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.7.10/rabbitmq-server-generic-unix-3.7.10.tar.xz
+					# xz -d rabbitmq-server-generic-unix-3.7.10.tar.xz
+					# tar -xvf rabbitmq-server-generic-unix-3.7.10.tar
+				</pre>
+				<li>启动 rabbitmq </li>
+				<pre class="brush:bash">
+					# cd rabbitmq_server-3.7.10/sbin
+					# ./rabbitmq-plugins enable rabbitmq_management  #启用web管理界面
+					# ./rabbitmq-server -detached  #启动
+					# ./rabbitmqctl add_user zhoubin Zhoubin77! #添加用户
+					# ./rabbitmqctl set_user_tags zhoubin administrator #设置权限
+					# 浏览器访问:ip:15672
+				</pre>
+				<li>管理rabbitmq</li>
+				<pre class="brush:bash">
+					# ./rabbitmq-server –detached  #启动
+					# ./rabbitmqctl stop #关闭
+
+					#插件管理
+					# ./rabbitmq-plugins enable xxx #开启某个插件
+					# ./rabbitmq-plugins disable xxx #关闭某个插件
+
+					# virtual_host  管理
+					# ./rabbitmqctl add_vhost xxx  #新建 virtual_host
+					# ./rabbitmqctl delete_vhost xxx  #撤销 virtual_host
+
+					# 用户管理
+					# ./rabbitmqctl add_user xxx pwd #新建用户
+					# ./rabbitmqctl delete_user xxx #删除用户
+					# ./rabbimqctl change_password username newpassword #改密码
+					# ./rabbitmqctl set_user_tags username tag #设置用户角色;Tag可以为 administrator,monitoring, management
+
+					#权限管理
+					# ./rabbitmqctl set_permissions [-p vhostpath] {user} {conf} {write}{read}
+					# vhostpath Vhost路径
+					# user用户名
+					# conf一个正则表达式match哪些配置资源能够被该用户访问。
+					# write 一个正则表达式match哪些配置资源能够被该用户读。
+					# read 一个正则表达式match哪些配置资源能够被该用户访问
+					#eg: ./rabbitmqctl  set_permissions -p "/" admin ".*" ".*" ".*"
+
+					# 常用命令
+					# ./rabbitmqctl status #查看状态
+					# ./rabbitmqctl list_queues #查看所有队列信息
+					# ./rabbitmqctl stop_app #关闭应用
+					# ./rabbitmqctl start_app #启动应用
+					# ./rabbitmqctl reset #清除所有队列
+				</pre>
+			</ol>
 
 		</section>
 
+		<section id="redis">
+			<h2 class="title">redis安装</h2>
 
+			<ol>
+				<li>下载redis安装包</li>
+				<pre class="brush:bash">
+					# wget http://download.redis.io/releases/redis-4.0.9.tar.gz
+				</pre>
+				<li>解压安装包</li>
+				<pre class="brush:bash">
+					# tar -zxvf redis-4.0.9.tar.gz -C /usr/local/
+				</pre>
+				<li>安装gcc依赖:</li>
+				<pre class="brush:bash">
+					# 先通过gcc -v是否有安装gcc，如果没有安装，执行命令sudo yum install -y gcc
+				</pre>
+				<li>cd到redis的解压目录下，并执行:</li>
+				<pre class="brush:bash">
+					# cd /usr/local/redis-4.0.9/
+				</pre>
+				<li>编译安装:</li>
+				<pre class="brush:bash">
+					 make MALLOC=libc
+					 cd src && make install
+				</pre>
+				<li>测试是否安装成功</li>
+				<pre class="brush:bash">
+					 cd /usr/local/redis-4.0.9/src/
+					 ./redis-server
+				</pre>
+				<li>配置redis</li>
+				<pre class="brush:bash">
+					# 修改 /usr/local/redis-4.0.9/redis.conf：    daemonize no   将值改为yes 保存退出
+					# 修改 /usr/local/redis-4.0.9/redis.conf：    logfile "/usr/local/redis/logs/log"
+					# 修改 /usr/local/redis-4.0.9/redis.conf：    dir /usr/local/redis/data
+
+					 ./redis-server /usr/local/redis-4.0.9/redis.conf #指定redis.conf文件启动
+				</pre>
+				<li>设置redis远程连接</li>
+				<pre class="brush:bash">
+					# 因为redis默认设置允许本地连接，将redis.conf中将bind 127.0.0.1 改为bind 0.0.0.0或者注释该行或者加入服务器IP
+					# 另外，阿里云ECS有一个安全组，找到并添加规则允许6379端口访问
+				</pre>
+				<li>设置redis连接密码</li>
+				<pre class="brush:bash">
+					# requirepass yourpassword  #在redis.conf中搜索requirepass这一行，然后在合适的位置添加配置
+					# 设置完成后执行/usr/local/bin/redis-server /usr/local/redis-4.0.6/redis.conf 更新配置
+				</pre>
+				<li>设置开机自启动</li>
+				<pre class="brush:bash">
+					#加入密码
+					vim /usr/local/redis-4.0.9/redis.conf
+					$CLIEXEC -a "zhoubin" -p $REDISPORT shutdown
+				</pre>
+				<pre class="brush:bash">
+					 mkdir /etc/redis
+					 cp /usr/local/redis-4.0.9/redis.conf /etc/redis/6379.conf
+					 cp /usr/local/redis-4.0.9/utils/redis_init_script /etc/init.d/redisd
+					# 切换到/etc/init.d目录下
+					# vim编辑redisd文件，在第一行加入如下两行注释，保存退出
+					# chkconfig:   2345 90 10
+					# description:  Redis is a persistent key-value database
+
+					 chkconfig redisd on #执行自启命令
+
+					#以后可以直接已服务的形式启动和关闭redis了
+					 service redisd start
+					 service redisd stop
+				</pre>
+				<li>service redis stop报错解决方法</li>
+				<pre class="brush:bash">
+					./src/redis-cli -p 6379 -a zhoubin shutdown
+				</pre>
+				<pre class="brush:bash">
+					#修改redis服务脚本，加入如下所示的红色授权信息即可：
+					vi /etc/init.d/redisd
+					$CLIEXEC -a "zhoubin" -p $REDISPORT shutdown
+				</pre>
+			</ol>
+
+
+		</section>
+
+		<section id="nginx">
+			<h2 class="title">nginx</h2>
+			<ol>
+				<li>nginx安装 </li>
+				<pre class="brush:bash">
+					#nginx下载
+					http://nginx.org/download/nginx-1.14.2.tar.gz
+					#安装必要组件
+					tar -zxvf nginx-1.14.2.tar.gz
+					cd nginx-1.14.2
+					yum -y install pcre-devel openssl openssl-devel
+					makdir /usr/local/nginx
+					./configure --prefix=/usr/local/nginx
+					make
+					make install
+				</pre>
+				<li>nginx启动</li>
+				<pre class="brush:bash">
+					cd /usr/local/nginx
+					./sbin/nginx #配置启动
+					nginx -s reload|reopen|stop|quit  #重新加载配置|重启|停止|退出 nginx
+					nginx -t   #测试配置是否有语法错误
+				</pre>
+				<li>nginx配置</li>
+				<pre class="brush:bash">
+					vim  /usr/local/nginx/conf/nginx.conf  #修改端口,默认加载目录
+					location / {
+						root   /usr/local/nginx/html/hirop-web/src/;
+						index  login.html index.html;
+					}
+
+				</pre>
+
+
+			</ol>
+		</section>
 
 	</div>
 </div>
@@ -393,6 +673,7 @@
 <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/jquery.nav.js"></script>
 <script type="text/javascript" src="syntax-highlighter/scripts/shCore.js"></script>
+<script type="text/javascript" src="syntax-highlighter/scripts/shBrushBash.js"></script>
 <script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
 <script type="text/javascript" src="syntax-highlighter/scripts/shBrushCss.js"></script>
 <script type="text/javascript" src="syntax-highlighter/scripts/shBrushJScript.js"></script>

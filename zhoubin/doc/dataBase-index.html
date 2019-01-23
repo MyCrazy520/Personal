@@ -33,9 +33,9 @@
 		</div>
 		<nav class="left-nav">
 			<ul id="nav">
-				<li class="current"><a href="#java">MySql</a></li>
-				<li><a href="#python3">Oracle</a></li>
-				<li><a href="#bash">MongoDB</a></li>
+				<li class="current"><a href="#mysql">MySql</a></li>
+				<li><a href="#oracle">Oracle</a></li>
+				<li><a href="#mongoDB">MongoDB</a></li>
 			</ul>
 		</nav>
 	</aside>
@@ -43,305 +43,113 @@
 	<div id="main-wrapper">
 		<div class="main-content">
 
-			<section id="java">
+			<section id="mysql">
 				<div class="content-header">
-					<h1>JAVA常用特性</h1>
+					<h1>MySql安装使用</h1>
 				</div>
 
 				<div class="welcome">
 
-					<h2 class="twenty">Java8排序和Java7排序</h2>
-					<pre class="brush: java">
-						private void sortUsingJava8(List&ltString&gt names){
-							Collections.sort(names, (s1, s2) -> s1.compareTo(s2));
-						}
-					</pre>
-					<pre class="brush: java">
-						private void sortUsingJava7(List&ltString&gt names){
-						  Collections.sort(names, new Comparator&ltString&gt() {
-							 @Override
-							 public int compare(String s1, String s2) {
-								return s1.compareTo(s2);
-							 }
-						  });
-					    }
-					</pre>
-				</div>
+					<h2 class="twenty">MySql安装</h2>
+					<pre class="brush: bash">
+						wget http://dev.mysql.com/get/mysql57-community-release-el7-8.noarch.rpm  #下载mysql源安装包
 
-				<div class="features">
-					<h2 class="twenty">Java 8 日期时间 API</h2>
-					<pre class="brush: java">
-						// 本地化日期时间 API
-						public void testLocalDateTime(){
+						yum localinstall mysql57-community-release-el7-8.noarch.rpm #安装mysql源
 
-						  LocalDateTime currentTime = LocalDateTime.now();
-						  System.out.println("当前时间: " + currentTime);
+						yum repolist enabled | grep "mysql.*-community.*" #检查mysql源是否安装成功
 
-						  LocalDate date1 = currentTime.toLocalDate();
-						  System.out.println("date1: " + date1);
+						#修改 vim /etc/yum.repos.d/mysql-community.repo源 ，改变默认安装的mysql版本。比如要安装5.6版本，将5.7源的enabled=1改成enabled=0。然后再将5.6源的enabled=0改成enabled=1即可
 
-						  Month month = currentTime.getMonth();
-						  int day = currentTime.getDayOfMonth();
-						  int seconds = currentTime.getSecond();
+						yum install mysql-community-server #安装MySQL
 
-						  System.out.println("月: " + month +", 日: " + day +", 秒: " + seconds);
+						systemctl start mysqld #启动MySQL服务
 
-						  LocalDateTime date2 = currentTime.withDayOfMonth(10).withYear(2012);
-						  System.out.println("date2: " + date2);
+						systemctl enable mysqld #开机启动
+						systemctl daemon-reload  #开机启动
 
-						  // 12 december 2014
-						  LocalDate date3 = LocalDate.of(2014, Month.DECEMBER, 12);
-						  System.out.println("date3: " + date3);
+						grep 'temporary password' /var/log/mysqld.log #修改root本地登录密码 1.查看mysql密码
 
-						  // 22 小时 15 分钟
-						  LocalTime date4 = LocalTime.of(22, 15);
-						  System.out.println("date4: " + date4);
+						mysql -uroot -p #修改root本地登录密码 2.连接mysql
 
-						  // 解析字符串
-						  LocalTime date5 = LocalTime.parse("20:15:30");
-						  System.out.println("date5: " + date5);
-					   	}
+						ALTER USER 'root'@'localhost' IDENTIFIED BY 'Zhoubin77!'; #修改密码[注意：后面的分号一定要跟上]
 
-
-						//输出结果如下:
-						当前时间: 2016-09-15T20:55:48.668
-						date1: 2016-04-15
-						月: APRIL, 日: 15, 秒: 48
-						date2: 2016-09-15T20:55:48.668
-						date3: 2014-12-12
-						date4: 22:15
-						date5: 20:15:30
-
-
-						// 使用时区的日期时间API
-						public void testZonedDateTime(){
-
-							ZonedDateTime date1 = ZonedDateTime.parse("2015-12-03T10:15:30+05:30[Asia/Shanghai]");
-							System.out.println("date1: " + date1);
-
-							ZoneId id = ZoneId.of("Europe/Paris");
-							System.out.println("ZoneId: " + id);
-
-							ZoneId currentZone = ZoneId.systemDefault();
-							System.out.println("当期时区: " + currentZone);
-						}
-
-
-						//输出结果如下:
-						date1: 2015-12-03T10:15:30+08:00[Asia/Shanghai]
-						ZoneId: Europe/Paris
-						当期时区: Asia/Shanghai
-
+						GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'Alax0518$%QvodteERb1940' WITH GRANT OPTION; #添加远程登录用户
 					</pre>
 
-				</div>
-
-				<div class="features">
-					<h2 class="twenty">并行数组</h2>
-					<pre class="brush: java">
-						// 本地化日期时间 API
-						public void testParallelSort(){
-
-						  long[] arrayOfLong = new long [ 20000 ];
-
-							Arrays.parallelSetAll( arrayOfLong,
-								index -> ThreadLocalRandom.current().nextInt( 1000000 ) );
-							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
-								i -> System.out.print( i + " " ) );
-							System.out.println();
-
-							Arrays.parallelSort( arrayOfLong );
-							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
-								i -> System.out.print( i + " " ) );
-							System.out.println();
-						}
-
-						//输出结果如下:
-						Unsorted: 591217 891976 443951 424479 766825 351964 242997 642839 119108 552378
-						Sorted: 39 220 263 268 325 607 655 678 723 793
+					<h2 class="twenty">mysql导入导出sql文件</h2>
+					<h6>导出数据和表结构</h6>
+					<pre class="brush: bash">
+						/usr/local/mysql/bin/   mysqldump -uroot -p abc > abc.sql  #敲回车后会提示输入密码
 					</pre>
-
-				</div>
-
-				<div class="section-content">
-					<h2 class="twenty">Java 8 JVM的新特性</h2>
-					<ol>
-						使用Metaspace（JEP 122）代替持久代（PermGen space）。在JVM参数方面，使用-XX:MetaSpaceSize和-XX:MaxMetaspaceSize代替原来的-XX:PermSize和-XX:MaxPermSize
-					</ol>
-
-				</div>
-
-			</section>
-
-
-			<section id="python3">
-				<div class="content-header">
-					<h1>python3</h1>
-				</div>
-
-
-				<div class="features">
-					<h2 class="twenty">List（列表）</h2>
-					<pre class="brush: python">
-						#!/usr/bin/python3
-
-						list = [ 'abcd', 786 , 2.23, 'runoob', 70.2 ]
-						tinylist = [123, 'runoob']
-
-						print (list)            # 输出完整列表
-						print (list[0])         # 输出列表第一个元素
-						print (list[1:3])       # 从第二个开始输出到第三个元素
-						print (list[2:])        # 输出从第三个元素开始的所有元素
-						print (tinylist * 2)    # 输出两次列表
-						print (list + tinylist) # 连接列表
-
-						#以上实例输出结果：
-						['abcd', 786, 2.23, 'runoob', 70.2]
-						abcd
-						[786, 2.23]
-						[2.23, 'runoob', 70.2]
-						[123, 'runoob', 123, 'runoob']
-						['abcd', 786, 2.23, 'runoob', 70.2, 123, 'runoob']
+					<h6>导出表结构</h6>
+					<pre class="brush: bash">
+						#/usr/local/mysql/bin/   mysqldump -uroot -p -d abc > abc.sql
 					</pre>
-					<h6>与Python字符串不一样的是，列表中的元素是可以改变的:</h6>
-					<pre class="brush: python">
-						>>>a = [1, 2, 3, 4, 5, 6]
-						>>> a[0] = 9
-						>>> a[2:5] = [13, 14, 15]
-						>>> a
-						[9, 2, 13, 14, 15, 6]
-						>>> a[2:5] = []   # 将对应的元素值设置为 []
-						>>> a
-						[9, 2, 6]
+					<h6>导入数据库方法1</h6>
+					mysql>create database abc;  #1、首先建空数据库
+					mysql>use abc; #2.导入数据库:选择数据库
+					mysql>set names utf8; #2.导入数据库:设置数据库编码
+					mysql>source /home/abc/abc.sql;#2.导入数据库:导入数据（注意sql文件的路径）
+					<h6>导入数据库方法2</h6>
+					#mysql -uabc_f -p abc < abc.sql
+					<h6>导入数据遇到的问题</h6>
+					<ul>
+						<li>问题：set global max_allowed_packet=524288000;</li>
+						<li>方法1：临时修改:</li>
+						<pre class="brush: bash">
+							mysql>set global max_allowed_packet=524288000;
+							mysql> show VARIABLES like '%max_allowed_packet%’; #查看是否修改了
+						</pre>
+						<li>方法2：修改my.cnf</li>
+						<pre class="brush: bash">
+							max_allowed_packet=256M
+						</pre>
+					</ul>
+					<h6>MySQL出现too many connections（1040）错误解决方法</h6>
+					<ul>
+						<li>修改my.cnf,添加如下:</li>
+					</ul>
+					<pre class="brush: bash">
+						max_connections=10000
 					</pre>
-					<h6>List内置了有很多方法:</h6>
-					<pre class="brush: python">
-						append
-						pop
-						remove:删除指定值,无序
-						del
-					</pre>
-
-				</div>
-
-				<div class="features">
-					<h2 class="twenty">Tuple（元组）</h2>
-					<pre class="brush: python">
-						#!/usr/bin/python3
-
-						tuple = ( 'abcd', 786 , 2.23, 'runoob', 70.2  )
-						tinytuple = (123, 'runoob')
-
-						print (tuple)             # 输出完整元组
-						print (tuple[0])          # 输出元组的第一个元素
-						print (tuple[1:3])        # 输出从第二个元素开始到第三个元素
-						print (tuple[2:])         # 输出从第三个元素开始的所有元素
-						print (tinytuple * 2)     # 输出两次元组
-						print (tuple + tinytuple) # 连接元组
-
-						#以上实例输出结果：
-						('abcd', 786, 2.23, 'runoob', 70.2)
-						abcd
-						(786, 2.23)
-						(2.23, 'runoob', 70.2)
-						(123, 'runoob', 123, 'runoob')
-						('abcd', 786, 2.23, 'runoob', 70.2, 123, 'runoob')
-					</pre>
-
-				</div>
-
-				<div class="section-content">
-					<h2 class="title">Set（集合）:</h2>
-					<pre class="brush: python">
-						#!/usr/bin/python3
-
-						student = {'Tom', 'Jim', 'Mary', 'Tom', 'Jack', 'Rose'}
-						print(student)   # 输出集合，重复的元素被自动去掉
-
-						# 成员测试
-						if 'Rose' in student :
-							print('Rose 在集合中')
-						else :
-							print('Rose 不在集合中')
-
-
-						# set可以进行集合运算
-						a = set('abracadabra')
-						b = set('alacazam')
-
-						print(a)
-
-						print(a - b)     # a 和 b 的差集
-
-						print(a | b)     # a 和 b 的并集
-
-						print(a & b)     # a 和 b 的交集
-
-						print(a ^ b)     # a 和 b 中不同时存在的元素
-
-						#以上实例输出结果：
-						{'Mary', 'Jim', 'Rose', 'Jack', 'Tom'}
-						Rose 在集合中
-						{'b', 'a', 'c', 'r', 'd'}
-						{'b', 'd', 'r'}
-						{'l', 'r', 'a', 'c', 'z', 'm', 'b', 'd'}
-						{'a', 'c'}
-						{'l', 'r', 'z', 'm', 'b', 'd'}
+					<h6>mysql column which is not functionally dependent GROUP BY clause</h6>
+					<ul>
+						<li>修改my.cnf,添加如下:</li>
+					</ul>
+					<pre class="brush: bash">
+						STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 					</pre>
 				</div>
 
-				<div class="section-content">
-					<h2 class="title">Dictionary（字典）:</h2>
-					<pre class="brush: python">
-						#!/usr/bin/python3
-
-						dict = {}
-						dict['one'] = "1 - 菜鸟教程"
-						dict[2]     = "2 - 菜鸟工具"
 
 
-
-
-						print (dict['one'])       # 输出键为 'one' 的值
-						print (dict[2])           # 输出键为 2 的值
-						print (tinydict)          # 输出完整的字典
-						print (tinydict.keys())   # 输出所有键
-						print (tinydict.values()) # 输出所有值
-
-
-
-						#以上实例输出结果：
-						1 - 菜鸟教程
-						2 - 菜鸟工具
-						{'name': 'runoob', 'code': 1, 'site': 'www.runoob.com'}
-						dict_keys(['name', 'code', 'site'])
-						dict_values(['runoob', 1, 'www.runoob.com'])
-					</pre>
-					<pre class="brush: python">
-						#直接从键值对序列中构建字典
-						>>>dict([('Runoob', 1), ('Google', 2), ('Taobao', 3)])
-						{'Taobao': 3, 'Runoob': 1, 'Google': 2}
-
-						>>> {x: x**2 for x in (2, 4, 6)}
-						{2: 4, 4: 16, 6: 36}
-
-						>>> dict(Runoob=1, Google=2, Taobao=3)
-						{'Runoob': 1, 'Google': 2, 'Taobao': 3}
-					</pre>
-				</div>
 
 
 			</section>
 
 
-			<section id="bash">
+			<section id="oracle">
 				<div class="content-header">
-					<h1>bash</h1>
+					<h1>oracle</h1>
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">mongoDB</h2>
+					<pre class="brush: bash">
+
+					</pre>
+				</div>
+			</section>
+
+
+			<section id="mongoDB">
+				<div class="content-header">
+					<h1>mongoDB</h1>
 				</div>
 
 
 				<div class="features">
-					<h2 class="twenty">List（列表）</h2>
+					<h2 class="twenty">mongoDB</h2>
 					<pre class="brush: bash">
 
 					</pre>

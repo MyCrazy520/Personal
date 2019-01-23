@@ -11,6 +11,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!-- <link rel="shortcut icon" href="img/favicon.png"> -->
 	<link href='http://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet'>
+
 	<!-- Syntax Highlighter -->
 	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shCore.css" media="all">
 	<link rel="stylesheet" type="text/css" href="syntax-highlighter/styles/shThemeDefault.css" media="all">
@@ -38,6 +39,7 @@
 				<li><a href="#htmlCSS">HTML+CSS</a></li>
 				<li><a href="#less">LESS</a></li>
 				<li><a href="#javaScript">JAVASCRIPT</a></li>
+				<li><a href="#jquery">Jquery</a></li>
 				<li><a href="#shell">SHELL</a></li>
 				<li><a href="#goLang">GOLANG</a></li>
 				
@@ -185,6 +187,7 @@
 					</ol>
 
 				</div>
+
 				<div class="section-content">
 					<h2 class="twenty">BlockingQuee中ArrayBlockingQueue,LinkedBlockingQueue</h2>
 					<ol>
@@ -193,6 +196,7 @@
 						<li>如果构造一个LinkedBlockingQueue对象，而没有指定其容量大小，LinkedBlockingQueue会默认一个类似无限大小的容量（Integer.MAX_VALUE），这样的话，如果生产者的速度一旦大于消费者的速度，也许还没有等到队列满阻塞产生，系统内存就有可能已被消耗殆尽了</li>
 					</ol>
 				</div>
+
 				<div class="section-content">
 					<h2 class="twenty">ConcurrentLinkedQueue一个很好用的队列</h2>
 					<ol>
@@ -219,8 +223,147 @@
 					<h2 class="twenty">Java中的BIO,NIO,AIO</h2>
 					<ol>
 						<li>BIO:JDK1.4以前用的是BIO,阻塞IO</li>
-						<li>NIO:同步非阻塞方式，目前的主流，采用多路复用技术</li>
-						<pre class="brush: java"></pre>
+						<li>NIO:同步非阻塞方式，目前的主流，采用多路复用技术:</li>
+						<pre class="brush: java">
+							public class NioServer implements Runnable{
+
+								private Selector selector;
+								private ByteBuffer readBuf = ByteBuffer.allocate(1024);
+								private ByteBuffer writeBuf = ByteBuffer.allocate(1024);
+
+								public NioServer(int port) throws IOException {
+
+									this.selector = Selector.open();//创建多路复用
+									ServerSocketChannel ssc = ServerSocketChannel.open();//创建通道
+									ssc.configureBlocking(false);//设置通道是否阻塞，如果为true，就和BIO类似
+									ssc.bind(new InetSocketAddress(port));//设置通道地址
+									ssc.register(this.selector, SelectionKey.OP_ACCEPT);//将ServerSocket通道注册到selector上，指定监听accept事件
+									System.out.println("BioServer start");
+								}
+								@Override
+								public void run() {
+									 while(true){
+										 try {
+											 this.selector.select();//select阻塞，监听相关事件
+
+											 //解除阻塞，返回key,key中含有通道，状态等信息
+											 Iterator&lt;SelectionKey&rt; keysIter = this.selector.selectedKeys().iterator();
+											 //遍历
+											 while(keysIter.hasNext()){
+												 SelectionKey key = keysIter.next();
+												 keysIter.remove();
+												 if(key.isValid()){
+													 if(key.isAcceptable()){
+														 this.accept(key);
+													 }
+													 if(key.isReadable()){
+														 this.read(key);
+													 }
+													 if(key.isWritable()){
+														 this.write(key);
+													 }
+
+												 }
+											 }
+
+										 } catch (IOException e) {
+											 e.printStackTrace();
+										 }
+									 }
+								}
+
+								private void accept(SelectionKey key) {
+									try {
+										// 获取服务通道
+										ServerSocketChannel ssc =  (ServerSocketChannel) key.channel();
+										// 获取客户端通道.
+										SocketChannel sc = ssc.accept();
+										// 设置非阻塞模式
+										sc.configureBlocking(false);
+										// 将客户端通道注册到多路复用器上，指定监听事件
+										sc.register(this.selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+
+								private void read(SelectionKey key) {
+									try {
+										// 获取通道
+										SocketChannel sc = (SocketChannel) key.channel();
+										// 读取数据, 读到buffer. 按程序运行顺序, 这里sc是否设置为阻塞效果都一样
+										int count = sc.read(this.readBuf);  // readBuf写时会改变position的值
+										if (count == -1) {
+											key.channel().close();
+											key.cancel();  //取消该通道在selector的注册, 之后不会被select轮询到
+											return;
+										}
+										// 有数据则进行读取. 读取前需要将position和limit进行复位
+										readBuf.flip();
+										// 根据缓冲区的数据长度创建相应大小的byte数组, 接收缓冲区的数据
+										byte[] bytes = new byte[this.readBuf.remaining()];
+										// 接收缓冲区数据
+										readBuf.get(bytes);
+										readBuf.clear();
+										String body = new String(bytes).trim();
+										System.out.println("Server获取的请求: " + body);
+										// 如果保持OP_READ会导致重复读
+										sc.register(this.selector, SelectionKey.OP_WRITE);
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+
+								private void write(SelectionKey key) {
+									try {
+										// 获取通道
+										SocketChannel sc = (SocketChannel) key.channel();
+										// 写回给客户端数据
+										writeBuf.put("来自服务器的响应".getBytes());
+										writeBuf.flip();
+										sc.write(writeBuf);
+										writeBuf.clear();
+										// 修改监听的状态位, 如果保持OP_WRITE会导致重复写
+										key.interestOps(SelectionKey.OP_READ);
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+
+								public static void main(String[] args) throws IOException {
+									new Thread(new NioServer(8090)).start();;
+								}
+
+							}
+						</pre>
+						<pre class="brush: java">
+							public class NioClient {
+								public static void main(String[] args) throws IOException {
+									SocketChannel sc = null;
+									ByteBuffer wrirteBuf = ByteBuffer.allocate(1024);
+									ByteBuffer readBuf = ByteBuffer.allocate(1024);
+									sc = SocketChannel.open();
+									sc.connect(new InetSocketAddress("127.0.0.1",8090));
+
+									while(true){
+										byte[] bytes1 = new byte[1024];//定义一个数组
+										System.in.read(bytes1);
+										wrirteBuf.put(bytes1);//把数组放到缓冲区
+										wrirteBuf.flip();//对缓冲区进行复位
+										sc.write(wrirteBuf);//写入数据
+										wrirteBuf.clear();//清空缓冲区
+
+										sc.read(readBuf);//接收服务端相应
+										readBuf.flip();
+										byte[] bytes2 = new byte[readBuf.remaining()];
+										readBuf.get(bytes2);
+										String content = new String(bytes2);
+										System.out.println("client获取数据:"+content);
+									}
+								}
+
+							}
+						</pre>
 						<li>AIO:JDK1.7才实现真正的异步AIO术</li>
 						<pre class="brush: java">
 							public class AioServer {
@@ -293,19 +436,31 @@
 								int len = inFC.read(byteBuffer);
 								String content = new String(byteBuffer.array(),0,len);
 								System.out.println(content);
-
-								String fileWritePath = "C://Users/77363/iwillcome.txt";
-								this.writeFile(fileWritePath,content);
-
 								inFC.close();
 							}
-
 							public void writeFile(String pathFile,String Content) throws IOException {
 								FileChannel outFC = new FileOutputStream(pathFile,true).getChannel();
 
 								ByteBuffer byteBuffer = ByteBuffer.wrap(Content.getBytes());
 								outFC.write(byteBuffer);
 								outFC.close();
+							}
+
+							public void readAndWrite(String sourceFile,String targetFile) throws IOException {
+								ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+								FileChannel readChannel = new FileInputStream(sourceFile).getChannel();
+								FileChannel writeChannel = new FileOutputStream(targetFile,true).getChannel();
+								while(true){
+									byteBuffer.clear();
+									int len = readChannel.read(byteBuffer);
+									if(len==-1){
+										break;
+									}
+									byteBuffer.flip();//重置posit位置
+									writeChannel.write(byteBuffer);
+								}
+								readChannel.close();
+								writeChannel.close();
 							}
 						</pre>
 					</ol>
@@ -317,7 +472,6 @@
 				<div class="content-header">
 					<h1>PYTHON3</h1>
 				</div>
-
 
 				<div class="features">
 					<h2 class="twenty">List（列表）</h2>
@@ -639,6 +793,228 @@
 
 			</section>
 
+			<section id="javaScript">
+				<div class="content-header">
+					<h1>javascript和jquery</h1>
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">arguments数组使用</h2>
+					<pre class="brush: javascript">
+						function testArguments(){ //arguments能获取函数中传入的所有参数
+							var sum = 0;
+							for(var i=0;i &lt; arguments.length; i++){
+								sum += arguments[i];
+							}
+							return sum;
+						}
+						console.log(testArguments(1,3,5,6,7));
+					</pre>
+					<h2 class="twenty">函数自调用的写法</h2>
+					<pre class="brush: jscript">
+						(function(){console.log("函数自调用测试");})();
+					</pre>
+					<h2 class="twenty">函数作为参数使用</h2>
+					<pre class="brush: javascript">
+						function f1(fn){
+							fn();//表明函数作为参数使用
+						}
+						function fn(){
+							console.log("zhoubin");
+						}
+						f1(fn);//调用方法
+					</pre>
+					<h2 class="twenty">变量的作用域</h2>
+					<h6>变量在函数内部是局部变量，其他任何情况下都是全局变量</h6>
+					<h6>全局变量是不能被delete,但隐式全局变量是能被删除的</h6>
+					<pre class="brush: javascript">
+						while(var i=0;i<10;i++){
+							var sum +=i;
+						}
+						console(sum);//此时能获取到sum;
+					</pre>
+					<pre class="brush: javascript">
+						function fsum(){
+							while(var i=0;i<10;i++){
+								var sum +=i;
+							}
+						}
+						console(sum);//此时不能获取sum
+					</pre>
+					<h2>函数调用的时候，会把函数的声明提升到同级的作用域的上面</h2>
+					<h6>函数的声明提升到当前作用域的最前面，只会提升声明不会提升调用</h6>
+					<h6>变量的声明会提升到变量使用之前</h6>
+					<pre class="brush: javascript">
+						f1();
+						var num = 20;
+						function f1(){
+							console.log(num);
+							num = 10;
+						}
+
+						//结果:undefined;
+					</pre>
+					<pre class="brush: javascript">
+
+						var num = 20;
+						function f1(){
+							console.log(num);
+							num = 10;
+						}
+						f1();//调用
+						//结果:20;
+					</pre>
+
+					<h2>变量的声明提升到当前作用域的最前面，只会提升声明，不会提升调用</h2>
+					<pre class="brush: javascript">
+
+						f1();//---不能调用
+						var f1 = function (){
+							console.log(num);
+							var num = 10;
+						}
+
+						//结果:undefined
+					</pre>
+
+					<h2>自定义构造函数创建对象</h2>
+					<pre class="brush: javascript">
+ 						function Person(){
+							this.name = "zhoubin";
+							this.age = "18";
+							this.say = function(){
+								console.log("my name is:"+this.name+",age:"+this.age);
+							}
+						}
+						var person = new Person();
+						console.log(person.name);//zhoubin
+						console.log(person["age"]);//18
+						person.say();//my name is:zhoubin,age:18
+						console(person instanceof Person);//判断函数的对象类型instanceof
+					</pre>
+
+					<h2>字面量方式创建对象</h2>
+					<pre class="brush: javascript">
+
+						var person ={};//map
+						var list = [];//list
+
+					</pre>
+					<h2>json对象的循环</h2>
+					<pre class="brush: javascript">
+						var json = {
+							"name":"zhoubin",
+							"age":"18",
+							"sex":"man"
+						};
+						for(var key in json){
+							console.log(key);
+							console.log(json[key]);
+						}
+					</pre>
+					<h2>值类型和引用类型</h2>
+					<h6>简单类型都是值类型，值类型的变量传递的是值</h6>
+					<h6>复杂类型是引用类型，引用类型传递的是地址</h6>
+
+					<h2>数组常用的方法</h2>
+					<pre class="brush: javascript">
+						arraya.contact(arrayb);//拼接数组
+						Array.from(array);//克隆数组
+						arrayaevery(function(elem,index){});//检测函数,返回值为boolean
+					</pre>
+
+					<h2>基本包装类型</h2>
+					<h6>如果是一个对象&&true,结果为true</h6>
+					<h6>如果是一个true&&对象,结果为对象</h6>
+					<pre class="brush: javascript">
+						var flag = new Boolean(false);
+						var result = true && flag;
+						var result2 = flag && true;
+						console.log(result);//Boolean
+						console.log(result2);//true
+					</pre>
+				</div>
+			</section>
+
+			<section id="jquery">
+				<div class="content-header">
+					<h1>jquery一些好玩函数</h1>
+				</div>
+
+				<div class="features">
+					<h2 class="twenty">动画函数</h2>
+					<pre class="brush: javascript">
+						$(function(){
+							//animate():改变div的高度，移动div
+							$("#animate").click(function(){
+								$("#box").animate({left:"200px"}).animate({height:"100px"});
+							});
+						});
+					</pre>
+					<p>结果如下:<button type="button" id="animate" class="btn btn-primary btn-lg">点我移动</button><button type="button" id="animateColor" class="btn btn-primary btn-lg">点我变色</button></p>
+					<div class="cover" style="height:100px;border:1px solid #D6D6D6;padding: 5px;">
+						<div id="box" style="background:#98bf21;height:50px;width:50px;position:absolute;">
+						</div>
+					</div>
+					<div class="cover" style="height:100px;border:1px solid #D6D6D6;padding: 5px;">
+						<div id="boxColor" style="height:50px;width:50px;">sss</div>
+					</div>
+
+
+					<h2 class="twenty">滑动函数</h2>
+					<pre class="brush: xml">
+						#panel,#flip
+						{
+							padding:5px;
+							text-align:center;
+							background-color:#e5eecc;
+							border:solid 1px #c3c3c3;
+						}
+						#panel
+						{
+							padding:50px;
+							display:none;
+						}
+					</pre>
+					<pre class="brush: javascript">
+						//slideToggle:上下滑动
+						$("#flip").click(function(){
+							$("#panel").slideToggle("slow");
+						});
+					</pre>
+					<p>结果如下:</p>
+					<div class="cover" style="height:120px;border:1px solid #D6D6D6;padding: 5px;">
+						<div id="flip" style="padding:5px;text-align:center;background-color:#e5eecc;border:solid 1px #c3c3c3;">点我，显示或隐藏面板。</div>
+						<div id="panel" style="padding:5px;display:none;height:80px;text-align:center;background-color:#e5eecc;border:solid 1px #c3c3c3;">Hello world!</div>
+					</div>
+
+					<h2 class="twenty">阻止冒泡事件</h2>
+					<pre class="brush: javascript">
+						$("#link").on("click",function(e){
+							alert("事件一");
+							//e.preventDefault();.//阻止浏览器默认事件
+							//e.stopPropagation();//阻止事件冒泡
+							return false;//既能阻止浏览器默认事件,也能阻止事件冒泡
+						});
+						$(body).on("click",function(){
+							alert("事件二");
+						});
+					</pre>
+
+					<h2 class="twenty">end()方法</h2>
+					<pre class="brush: javascript">
+						var wxhp = "*";
+						var wxxp = "x";
+						$("#link").on("mouseenter",function(e){
+							//end方法:
+							$(this).text("wxhp").prevAll().text(wxhp).end().nextAll().text("wxxp");
+						});
+
+					</pre>
+
+				</div>
+			</section>
+
 			<section id="shell">
 				<div class="content-header">
 					<h1>linux命令和SHELL</h1>
@@ -723,6 +1099,32 @@
 						# mount /dev/hdc6 /mnt/hdc6  <==创建的 /dev/hdc6 挂载到 /mnt/hdc6 上面
 						# umount /dev/hdc6 <==卸载/dev/hdc6
 					</pre>
+					<p>防火墙的关闭和开启</p>
+					<pre class="brush: bash">
+						# systemctl stop firewalld.service #关闭防火墙命令
+
+						# systemctl start firewalld.service #开启防火墙
+
+						# systemctl disable firewalld.service # 关闭开机自启动
+
+						# systemctl enable firewalld.service 开启开机启动
+					</pre>
+
+					<p>查看进程</p>
+					<pre class="brush: bash">
+						# ps -ef | grep java
+						# ps -aux | grep java
+						# kill -9 [PID]
+					</pre>
+
+					<p>vi命令</p>
+					<pre class="brush: bash">
+						G：光标移至最后一行
+						nG：光标移至第n行首
+						n+：光标下移n行
+						n-：光标上移n行
+					</pre>
+
 				</div>
 
 				<div class="features">
@@ -893,7 +1295,10 @@
 	
 	<!-- Essential JavaScript Libraries
 	==============================================-->
+
 	<script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
+	<script type="text/javascript" src="js/jquery.color.js"></script>
+	<script type="text/javascript" src="js/custom.js"></script>
 	<script type="text/javascript" src="js/jquery.nav.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shCore.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJava.js"></script>
@@ -902,10 +1307,12 @@
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushErlang.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJScript.js"></script>
+
 	<script type="text/javascript">
-		SyntaxHighlighter.all()
+		SyntaxHighlighter.all();
 	</script>
-	<script type="text/javascript" src="js/custom.js"></script>
+
 	
 </body>
 </html>
