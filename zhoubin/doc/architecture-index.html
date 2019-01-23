@@ -33,7 +33,6 @@
 		</div>
 		<nav class="left-nav">
 			<ul id="nav">
-				<li class="current"><a href="#java">JAVA</a></li>
 				<li><a href="#nginx">Nginx+Apache</a></li>
 				<li><a href="#tomcat">tomcat</a></li>
 				<li><a href="#activeMQ">ActiveMQ+RocketMQ+Rabbitmq</a></li>
@@ -50,127 +49,72 @@
 	<div id="main-wrapper">
 		<div class="main-content">
 
-			<section id="java">
+			<section id="mybatis">
 				<div class="content-header">
-					<h1>登录</h1>
+					<h1>Mybatis</h1>
 				</div>
-
-				<div class="welcome">
-
-					<h2 class="twenty">登录流程</h2>
+				<div class="features">
+					<h2 class="twenty">一对多关联</h2>
 					<div class="section-content">
 						<ol>
-							<li>验证码生成</li>
-							<li>获取登录注册加密动态秘钥请求</li>
-							<li>获取登录注册加密动态秘钥请求</li>
+							<li>创建类:Classes(班级);Teachers(教师);Students学生</li>
+							<li>Classes，有一个List&lt;Students学生$rt; students属性</li>
+							<li>Classes，有一个List&lt;Teachers教师$rt; teachers属性</li>
+							<li>classMapper.xml</li>
 						</ol>
 					</div>
+					<pre class="brush: xml">
+						<!--
+							根据classId查询对应的班级信息,包括学生,老师
+						 -->
+						<!--
+						方式一: 嵌套结果: 使用嵌套结果映射来处理重复的联合结果的子集
+						SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=s.class_id AND  c.c_id=1
+						 -->
+						<select id="getClass3" parameterType="int" resultMap="ClassResultMap3">
+							select * from class c, teacher t,student s where c.teacher_id=t.t_id and c.C_id=s.class_id and  c.c_id=#{id}
+						</select>
+						<resultMap type="com.domain.Classes" id="ClassResultMap3">
+							<id property="id" column="c_id"/>
+							<result property="name" column="c_name"/>
+							<association property="teacher" column="teacher_id" javaType="com.domain.Teacher">
+								<id property="id" column="t_id"/>
+								<result property="name" column="t_name"/>
+							</association>
+							<!-- ofType指定students集合中的对象类型 -->
+							<collection property="students" ofType="com.domain.Student">
+								<id property="id" column="s_id"/>
+								<result property="name" column="s_name"/>
+							</collection>
+						</resultMap>
 
-				</div>
+						<!--
+							方式二：嵌套查询：通过执行另外一个SQL映射语句来返回预期的复杂类型
+								SELECT * FROM class WHERE c_id=1;
+								SELECT * FROM teacher WHERE t_id=1   //1 是上一个查询得到的teacher_id的值
+								SELECT * FROM student WHERE class_id=1  //1是第一个查询得到的c_id字段的值
+						 -->
+						 <select id="getClass4" parameterType="int" resultMap="ClassResultMap4">
+							select * from class where c_id=#{id}
+						 </select>
+						 <resultMap type="com.domain.Classes" id="ClassResultMap4">
+							<id property="id" column="c_id"/>
+							<result property="name" column="c_name"/>
+							<association property="teacher" column="teacher_id" javaType="me.gacl.domain.Teacher" select="getTeacher2"></association>
+							<collection property="students" ofType="me.gacl.domain.Student" column="c_id" select="getStudent"></collection>
+						 </resultMap>
 
-				<div class="features">
-					<h2 class="twenty">Java 8 日期时间 API</h2>
-					<pre class="brush: java">
-						// 本地化日期时间 API
-						public void testLocalDateTime(){
+						 <select id="getTeacher2" parameterType="int" resultType="me.gacl.domain.Teacher">
+							SELECT t_id id, t_name name FROM teacher WHERE t_id=#{id}
+						 </select>
 
-						  LocalDateTime currentTime = LocalDateTime.now();
-						  System.out.println("当前时间: " + currentTime);
-
-						  LocalDate date1 = currentTime.toLocalDate();
-						  System.out.println("date1: " + date1);
-
-						  Month month = currentTime.getMonth();
-						  int day = currentTime.getDayOfMonth();
-						  int seconds = currentTime.getSecond();
-
-						  System.out.println("月: " + month +", 日: " + day +", 秒: " + seconds);
-
-						  LocalDateTime date2 = currentTime.withDayOfMonth(10).withYear(2012);
-						  System.out.println("date2: " + date2);
-
-						  // 12 december 2014
-						  LocalDate date3 = LocalDate.of(2014, Month.DECEMBER, 12);
-						  System.out.println("date3: " + date3);
-
-						  // 22 小时 15 分钟
-						  LocalTime date4 = LocalTime.of(22, 15);
-						  System.out.println("date4: " + date4);
-
-						  // 解析字符串
-						  LocalTime date5 = LocalTime.parse("20:15:30");
-						  System.out.println("date5: " + date5);
-					   	}
-
-
-						//输出结果如下:
-						当前时间: 2016-09-15T20:55:48.668
-						date1: 2016-04-15
-						月: APRIL, 日: 15, 秒: 48
-						date2: 2016-09-15T20:55:48.668
-						date3: 2014-12-12
-						date4: 22:15
-						date5: 20:15:30
-
-
-						// 使用时区的日期时间API
-						public void testZonedDateTime(){
-
-							ZonedDateTime date1 = ZonedDateTime.parse("2015-12-03T10:15:30+05:30[Asia/Shanghai]");
-							System.out.println("date1: " + date1);
-
-							ZoneId id = ZoneId.of("Europe/Paris");
-							System.out.println("ZoneId: " + id);
-
-							ZoneId currentZone = ZoneId.systemDefault();
-							System.out.println("当期时区: " + currentZone);
-						}
-
-
-						//输出结果如下:
-						date1: 2015-12-03T10:15:30+08:00[Asia/Shanghai]
-						ZoneId: Europe/Paris
-						当期时区: Asia/Shanghai
+						 <select id="getStudent" parameterType="int" resultType="me.gacl.domain.Student">
+							SELECT s_id id, s_name name FROM student WHERE class_id=#{id}
+						 </select>
 
 					</pre>
 
 				</div>
-
-				<div class="features">
-					<h2 class="twenty">并行数组</h2>
-					<pre class="brush: java">
-						// 本地化日期时间 API
-						public void testParallelSort(){
-
-						  long[] arrayOfLong = new long [ 20000 ];
-
-							Arrays.parallelSetAll( arrayOfLong,
-								index -> ThreadLocalRandom.current().nextInt( 1000000 ) );
-							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
-								i -> System.out.print( i + " " ) );
-							System.out.println();
-
-							Arrays.parallelSort( arrayOfLong );
-							Arrays.stream( arrayOfLong ).limit( 10 ).forEach(
-								i -> System.out.print( i + " " ) );
-							System.out.println();
-						}
-
-						//输出结果如下:
-						Unsorted: 591217 891976 443951 424479 766825 351964 242997 642839 119108 552378
-						Sorted: 39 220 263 268 325 607 655 678 723 793
-					</pre>
-
-				</div>
-
-				<div class="section-content">
-					<h2 class="twenty">Java 8 JVM的新特性</h2>
-					<ol>
-						使用Metaspace（JEP 122）代替持久代（PermGen space）。在JVM参数方面，使用-XX:MetaSpaceSize和-XX:MaxMetaspaceSize代替原来的-XX:PermSize和-XX:MaxPermSize
-					</ol>
-
-				</div>
-
 			</section>
 
 		</div>
