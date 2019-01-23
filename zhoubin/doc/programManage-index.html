@@ -33,6 +33,7 @@
 		</div>
 		<nav class="left-nav">
 			<ul id="nav">
+				<li><a href="#login">登录</a></li>
 				<li class="current"><a href="#range">范围</a></li>
 				<li><a href="#progress">进度</a></li>
 				<li><a href="#cost">成本</a></li>
@@ -45,6 +46,156 @@
 	
 	<div id="main-wrapper">
 		<div class="main-content">
+
+			<section id="login">
+				<div class="content-header">
+					<h1>登录</h1>
+				</div>
+
+
+				<div class="features">
+					<ol>
+						<li>pom.xml引入shiro</li>
+						<pre class="brush: xml">
+							<dependency>
+								<groupId>org.apache.shiro</groupId>
+								<artifactId>shiro-spring</artifactId>
+							</dependency>
+						</pre>
+						<li>登录请求</li>
+						<h6>编写PasswordFilter extends AccessControlFilter</h6>
+						<h6>添加验证码生成，放入redis缓存中</h6>
+						<pre class="brush: java">
+							@Override
+							protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+								//验证码生成
+								if (isVerifyCodeGet(request)) {
+									ByteArrayOutputStream bos;
+									try {
+										bos = new ByteArrayOutputStream();
+										// 生成 GIF 格式验证码
+										Captcha captcha = new SpecCaptcha(130, 38, 4);
+										captcha.out(bos);
+										String verifyCode = captcha.text();        // 验证码字符串
+
+										// 将图片转换为 base64 编码
+										byte[] buf = bos.toByteArray();
+										String imgBase64Str = Base64.encodeBase64String(buf);
+										imgBase64Str = "data:image/gif;base64," + imgBase64Str;
+
+										// 将验证码保存到缓存中，过期时间为两分钟
+										String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+										String verifyCodeId = "hirop-verifyCodeId-" + uuid;
+										redisTemplate.opsForValue().set(verifyCodeId, verifyCode, 60 * 2, TimeUnit.SECONDS);
+
+										Message message = new Message();
+										message.ok(0,"create verify code success")
+												.addData("imgSrc",imgBase64Str).addData("verifyCodeId", verifyCodeId);
+										RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+
+									}catch (Exception e) {
+										LOGGER.warn("签发动态秘钥失败"+e.getMessage(),e);
+										Message message = new Message();
+										message.ok(0,"issued tokenKey fail");
+										RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+									}
+									return false;
+								}
+
+								return false;
+							}
+						</pre>
+						<h6>输入用户名和密码发送登录注册请求,返回秘钥给前端;同时后端将秘钥放入redis缓存中</h6>
+						<pre class="brush: java">
+							// 判断若为获取登录注册加密动态秘钥请求
+							if (isPasswordTokenGet(request)) {
+								//动态生成秘钥，redis存储秘钥供之后秘钥验证使用，设置有效期5秒用完即丢弃
+								String tokenKey = CommonUtil.getRandomString(16);
+								String userKey = CommonUtil.getRandomString(6);
+								try {
+									redisTemplate.opsForValue().set("TOKEN_KEY_"+ IpUtil.getIpFromRequest(WebUtils.toHttp(request)).toUpperCase()+userKey.toUpperCase(),tokenKey,10, TimeUnit.SECONDS);
+									// 动态秘钥response返回给前端
+									Message message = new Message();
+									message.ok(0,"issued tokenKey success")
+											.addData("tokenKey",tokenKey).addData("userKey", userKey.toUpperCase());
+									RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+
+								}catch (Exception e) {
+									LOGGER.warn("签发动态秘钥失败"+e.getMessage(),e);
+									Message message = new Message();
+									message.ok(0,"issued tokenKey fail");
+									RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+								}
+								return false;
+							}
+						</pre>
+						<h6>登录请求判断</h6>
+						<pre class="brush: java">
+							// 判断是否是登录请求
+							if(isPasswordLoginPost(request)){
+
+								AuthenticationToken authenticationToken = null;
+								try {
+									authenticationToken = createPasswordToken(request);
+								}catch (Exception e) {
+									// response 告知无效请求
+									Message message = new Message().error(1111,"error request");
+									RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+									return false;
+								}
+								Subject subject = getSubject(request,response);
+								try {
+									subject.login(authenticationToken);
+									//登录认证成功,进入请求派发json web token url资源内
+									return true;
+								}catch (AuthenticationException e) {
+									LOGGER.warn(authenticationToken.getPrincipal()+"::"+e.getMessage());
+									// 返回response告诉客户端认证失败
+									Message message = new Message().error(1002,"登录认证异常");
+									RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+									return false;
+								}catch (Exception e) {
+									LOGGER.error(authenticationToken.getPrincipal()+"::认证异常::"+e.getMessage(),e);
+									// 返回response告诉客户端认证失败
+									Message message = new Message().error(1002,"登录认证异常");
+									RequestResponseUtil.responseWrite(JSON.toJSONString(message),response);
+									return false;
+								}
+							}
+						</pre>
+						<pre class="brush: java">
+							//此方法会间接调用我们自己实现的realm的doGetAuthenticationInfo，根据我们在数据库中获取的信息（存放在info中）和调用login方法时传递的AuthenticationToken中的信息对比。
+							subject.login(authenticationToken);
+							//如下:
+							protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+								if (!(authenticationToken instanceof PasswordToken)) return null;
+
+								if(null==authenticationToken.getPrincipal()||null==authenticationToken.getCredentials()){
+									throw new UnknownAccountException();
+								}
+								String appId = (String)authenticationToken.getPrincipal();
+
+								UserModel userModel = null;
+								try {
+									userModel = accountProvider.loadAccount(appId);
+								} catch (BizException e) {
+									e.printStackTrace();
+								}
+								if (userModel != null) {
+									// 用盐对密码进行MD5加密
+									((PasswordToken) authenticationToken).setPassword(MD5Util.md5(((PasswordToken) authenticationToken).getPassword()+userModel.getSalt()));
+									return new SimpleAuthenticationInfo(appId,userModel.getPassword(),getName());
+								} else {
+									return new SimpleAuthenticationInfo(appId,"",getName());
+								}
+							}
+
+						</pre>
+					</ol>
+				</div>
+
+
+			</section>
 
 			<section id="range">
 				<div class="content-header">
@@ -143,6 +294,7 @@
 	<script type="text/javascript" src="syntax-highlighter/scripts/shCore.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushJava.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushXml.js"></script>
 	<script type="text/javascript" src="syntax-highlighter/scripts/shBrushBash.js"></script>
 	<script type="text/javascript">
 		SyntaxHighlighter.all()
