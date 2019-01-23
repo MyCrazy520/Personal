@@ -36,8 +36,10 @@
 				<li class="current"><a href="#svn">SVN</a></li>
 				<li><a href="#git">git和github</a></li>
 				<li><a href="#maven">maven</a></li>
+				<li><a href="#jenkins">jenkins</a></li>
 				<li><a href="#idea">idea和eclipse</a></li>
 				<li><a href="#xshell">xshell和flashFXP</a></li>
+				<li><a href="#vsc">Visual Studio Code</a></li>
 			</ul>
 		</nav>
 	</aside>
@@ -128,8 +130,21 @@
 
 						</ol>
 					</div>
-
+					<h2 class="twenty">SVN服务器报错</h2>
+					<div class="section-content">
+						<ol>
+							<li>svn: 无权打开根进行编辑操作</li>
+							<pre class="brush: bash">
+								#在svnserve.conf中设置：
+								anon-access = none
+								auth-access = write
+								#如果，anon-access = read，需要在在authz文件中加上：
+								[/] * = r
+							</pre>
+						</ol>
+					</div>
 				</div>
+
 
 			</section>
 
@@ -214,10 +229,153 @@
 				</div>
 			</section>
 
+			<section id="jenkins">
+				<div class="content-header">
+					<h1>jenkins</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">jenkins安装部署</h2>
+					<div class="section-content">
+						<ol>
+							<li>JAVA JDK安装</li>
+							<p>下载解压</p>
+							<pre class="brush: bash">
+								# tar -zxvf  jdk-8u192-linux-x64.tar.gz;
+								# mv jdk1.8.0_192/ /usr/local/java/ ;
+							</pre>
+							<p>配置环境变量</p>
+							<pre class="brush: bash">
+								# vi /etc/profile
+								JAVA_HOME=/usr/local/jdk1.8.0_192
+								JRE_HOME=/usr/local/jdk1.8.0_192/jre
+								PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
+								CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
+								export JAVA_HOME PATH  CLASSPATH
+								#source /etc/profile
+							</pre>
+							<li>TOMCAT 安装</li>
+							<p>下载解压</p>
+							<pre class="brush: bash">
+								# wget http://mirrors.tuna.tsinghua.edu.cn/apache/tomcat/tomcat-6/v6.0.45/bin/apache-tomcat-6.0.45.tar.gz
+								# tar xzf  apache-tomcat-6.0.45.tar.gz
+								# mv apache-tomcat-6.0.45  /usr/local/tomcat
+							</pre>
+							<li>MAVEN 安装</li>
+							<p>下载解压</p>
+							<pre class="brush: bash">
+								# wget http://mirror.bit.edu.cn/apache/maven/maven-3/3.2.3/binaries/apache-maven-3.2.3-bin.tar.gz
+								# tar vxf apache-maven-3.2.3-bin.tar.gz
+								# mv apache-maven-3.2.3 /usr/local/maven3
+							</pre>
+							<p>配置环境变量</p>
+							<pre class="brush: bash">
+								# vi /etc/profile
+								MAVEN_HOME=/usr/local/maven3
+								export MAVEN_HOME
+								export PATH=${PATH}:${MAVEN_HOME}/bin
+								#source /etc/profile
+							</pre>
+							<p>jenkins安装</p>
+							<pre class="brush: bash">
+								# wget http://ftp.yz.yamagata-u.ac.jp/pub/misc/jenkins/war-stable/1.651.2/jenkins.war
+								# mv jenkins.war /usr/local/tomcat/webapps/
+							</pre>
+							<p>jenkins启动</p>
+							<pre class="brush: bash">
+								# cd /usr/local/tomcat/bin
+								# ./startup.sh #或 ./catalina.sh start
+							</pre>
+							<p>浏览器中就可以访问jenkins了</p>
+							<li>JAVA JDK安装</li>
+							<p>Jenkins脚本自动化</p>
+							<p>点击工程名称-配置-构建后操作-设置Jenkins编译打包完后，war包存放的位置，如下图</p>
+							<img src="img/11.jpg"/>
+							<p>输入如下配置:**/target/*.war</p>
+							<img src="img/12.jpg"/>
+							<p>如上-构建触发器-一个构建步骤，选择Add-post-build step-Excute shell</p>
+							<img src="img/13.jpg"/>
+							<p>然后把脚本内容写入即可</p>
+							<img src="img/14.jpg"/>
+							<pre class="brush: bash">
+								rm -rf  /root/.jenkins/workspace/jfedu/target/edu.war
+								cp /root/.jenkins/workspace/jfedu/target/edu.war  /root/.jenkins/jobs/jfedu/builds/lastSuccessfulBuild/archive/target/
+								ssh  root@192.168.189.130  'bash -x -s' < /data/sh/auto_deploy.sh
+							</pre>
+							<p>自动部署脚本</p>
+							<pre class="brush: bash">
+								#!/bin/bash
+								#Auto deploy Tomcat for jenkins perf
+								#by author wugk 2016-07-06
+								export JAVA_HOME=/usr/java/jdk1.6.0_25
+								TOMCAT_PID=`/usr/sbin/lsof -n -P -t -i :10013`
+								TOMCAT_DIR="/usr/local/tomcat/"
+								FILES="jfedu.war"
+								DES_DIR="/export/data/tomcatRoot/ptest.jd.com/"
+								DES_URL="http://123.57.11.203:8080/job/Ptest_Online/lastSuccessfulBuild/target"
+								BAK_DIR="/export/backup/`date +%Y%m%d-%H%M`"
+								[ -n "$TOMCAT_PID" ] && kill -9 $TOMCAT_PID
+								cd $DES_DIR
+								rm -rf $FILES
+								mkdir -p $BAK_DIR;\cp -a $DES_DIR/* $BAK_DIR/
+								rm -rf $DES_DIR/*
+								wget $DES_URL/$FILES
+								/usr/java/jdk1.6.0_25/bin/jar  -xvf  $FILES
+								####################
+								cd $TOMCAT_DIR;rm -rf work
+								/bin/sh $TOMCAT_DIR/bin/start.sh
+								sleep 10
+								tail -n 50 $TOMCAT_DIR/logs/catalina.out
+							</pre>
+						</ol>
+					</div>
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">jenkins密码重置</h2>
+					<div class="section-content">
+						<ol>
+							<pre class="brush: bash">
+								find / -name '.jenkins' # /root/.jenkins
+								vim config.xml
+							</pre>
+							<pre class="brush: xml">
+								<useSecurity>true</useSecurity>  
+									<authorizationStrategy	class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">  
+									<denyAnonymousReadAccess>true</denyAnonymousReadAccess>  
+								</authorizationStrategy>  
+								<securityRealm		class="hudson.security.HudsonPrivateSecurityRealm">  
+								  <disableSignup>true</disableSignup>  
+								  <enableCaptcha>false</enableCaptcha>  
+								</securityRealm>  
+							</pre>
+							<p>重启Jenkins服务</p>
+							<p>进入首页>“系统管理”>“Configure Global Security”</p>
+							<p>勾选“启用安全</p>
+							<p>点选“Jenkins专有用户数据库”，并点击“保存”</p>
+							<p>重新点击首页>“系统管理”,发现此时出现“管理用户”</p>
+							<p>点击进入展示“用户列表”</p>
+							<p>点击右侧进入修改密码页面，修改后即可重新登录</p>
+						</ol>
+					</div>
+				</div>
+
+				<div class="section-content">
+					<h2 class="twenty">jenkins密码重置</h2>
+					<div class="section-content">
+						<ol>
+							<li></li>
+						</ol>
+					</div>
+				</div>
+
+			</section>
+
+
 			<section id="idea">
 				<div class="content-header">
 					<h1>idea</h1>
 				</div>
+
 				<div class="section-content">
 					<h2 class="twenty">IDEA一些规范配置</h2>
 					<div class="section-content">
@@ -281,6 +439,10 @@
 							<li>Ctrl+Shift+R:通用搜索</li>
 							<li>Ctrl+Shift+N:查找文件</li>
 							<li>Atl+Enter:自动补全</li>
+							<li>代码中敲入psvm,会自动补充main方法</li>
+							<li>方法体内中敲入fori,会自动补充for循环方法</li>
+							<li>选中抽取的方法,敲入:Ctrl + Alt + M</li>
+							<li>get和set方法Alt+Enter</li>
 						</ol>
 					</div>
 				</div>
@@ -312,13 +474,41 @@
 					<h2 class="twenty">flashFXP</h2>
 					<div class="section-content">
 						<ol>
-							<li>flashFXP处理文件上传很方便，统一输入命令</li>
+							<li>flashFXP处理文件上传很方便,使用的协议ftp和sftp</li>
 						</ol>
 					</div>
 				</div>
 
 			</section>
 
+
+			<section id="vsc">
+				<div class="content-header">
+					<h1>Visual Studio Code</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">Visual Studio Code</h2>
+					<div class="section-content">
+						<ol>
+							<li>go语言开发工具，可以和git bash配合</li>
+						</ol>
+					</div>
+				</div>
+			</section>
+
+			<section id="webStorm">
+				<div class="content-header">
+					<h1>WebStorm</h1>
+				</div>
+				<div class="section-content">
+					<h2 class="twenty">WebStorm</h2>
+					<div class="section-content">
+						<ol>
+							<li>前端编程工具</li>
+						</ol>
+					</div>
+				</div>
+			</section>
 
 
 		</div>
