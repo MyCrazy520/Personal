@@ -48,6 +48,42 @@
 	
 	<div id="main-wrapper">
 		<div class="main-content">
+			<section id="nginx">
+				<h2 class="title">nginx</h2>
+				<ol>
+					<li>nginx安装 </li>
+				<pre class="brush:bash">
+					#nginx下载
+					http://nginx.org/download/nginx-1.14.2.tar.gz
+					#安装必要组件
+					tar -zxvf nginx-1.14.2.tar.gz
+					cd nginx-1.14.2
+					yum -y install pcre-devel openssl openssl-devel
+					makdir /usr/local/nginx
+					./configure --prefix=/usr/local/nginx
+					make
+					make install
+				</pre>
+					<li>nginx启动</li>
+				<pre class="brush:bash">
+					cd /usr/local/nginx
+					./sbin/nginx #配置启动
+					nginx -s reload|reopen|stop|quit  #重新加载配置|重启|停止|退出 nginx
+					nginx -t   #测试配置是否有语法错误
+				</pre>
+					<li>nginx配置</li>
+				<pre class="brush:bash">
+					vim  /usr/local/nginx/conf/nginx.conf  #修改端口,默认加载目录
+					location / {
+						root   /usr/local/nginx/html/hirop-web/src/;
+						index  login.html index.html;
+					}
+
+				</pre>
+
+
+				</ol>
+			</section>
 
 			<section id="mybatis">
 				<div class="content-header">
